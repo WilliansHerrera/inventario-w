@@ -1,0 +1,81 @@
+{
+  "build": {
+    "beforeBuildCommand": "",
+    "beforeDevCommand": "",
+    "devPath": "../frontend",
+    "distDir": "../frontend",
+    "withGlobalTauri": true
+  },
+  "package": {
+    "productName": "POS-Inventario-W",
+    "version": "1.0.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "http": {
+        "all": true,
+        "request": true,
+        "scope": ["http://**", "https://**"]
+      },
+      "shell": {
+        "all": true,
+        "open": true
+      },
+      "window": {
+        "all": true
+      },
+      "sql": {
+        "all": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "category": "Office",
+      "copyright": "",
+      "deb": {
+        "depends": []
+      },
+      "externalBin": [],
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ],
+      "identifier": "com.inventario-w.pos",
+      "longDescription": "Terminal de Punto de Venta Nativa para Windows con Sincronización SQLite.",
+      "macOS": {
+        "entitlements": null,
+        "exceptionDomain": "",
+        "frameworks": [],
+        "providerBundleIdentifier": null,
+        "signingIdentity": null
+      },
+      "resources": [],
+      "shortDescription": "POS Nativo Windows",
+      "targets": "all",
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampServer": ""
+      }
+    },
+    "security": {
+      "csp": null
+    },
+    "updater": {
+      "active": false
+    },
+    "windows": [
+      {
+        "fullscreen": false,
+        "height": 720,
+        "resizable": true,
+        "title": "Terminal POS - Inventario W",
+        "width": 1080
+      }
+    ]
+  }
+}
