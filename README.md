@@ -41,7 +41,15 @@ Developed with a focus on **speed, reliability, and modern aesthetics**, this sy
 - **Cash Register (Cajas):** Track sales sessions, balances, and user-specific transactions.
 - **Sales Analytics:** Comprehensive reports on sales performance and revenue.
 
-### ⚙️ Global Configuration
+### 🖥️ Native Windows Terminal (Beta)
+- **Offline-First:** Funciona sin internet usando SQLite local.
+- **Sincronización Inteligente:** Sincroniza productos y ventas automáticamente al detectar conexión.
+- **Ultra-Ligera:** App nativa construida con Tauri (~10MB).
+- **Seguridad por Token:** Cada terminal se autentica con su propio token único.
+
+---
+
+## ⚙️ Global Configuration
 - **Customizable Branding:** Easily update your business logo, receipt headers, and footers.
 - **Regional Settings:** Configure default currency, decimal precision, and language.
 
@@ -90,6 +98,11 @@ Developed with a focus on **speed, reliability, and modern aesthetics**, this sy
    ```bash
    php artisan serve
    ```
+
+### 🖥️ Windows Terminal Build
+El instalador `.exe` se genera automáticamente mediante **GitHub Actions** al subir cambios. También puedes compilarlo localmente:
+1. Ve a la carpeta `POS-Windows`.
+2. Ejecuta `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass; .\build.ps1`.
 
 ---
 
