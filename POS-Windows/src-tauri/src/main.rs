@@ -3,18 +3,17 @@
     windows_subsystem = "windows"
 )]
 
-use tauri::{Manager};
+use tauri::{generate_handler, generate_context, Builder};
 
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
 fn main() {
-    tauri::Builder::default()
+    Builder::default()
         .plugin(tauri_plugin_sql::Builder::default().build())
-        .invoke_handler(tauri::generate_handler![greet])
-        .run(tauri::generate_context!())
+        .invoke_handler(generate_handler![greet])
+        .run(generate_context!())
         .expect("error while running tauri application");
 }
