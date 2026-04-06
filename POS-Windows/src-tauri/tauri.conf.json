@@ -28,7 +28,7 @@
     },
     "bundle": {
       "active": true,
-      "category": "Office",
+      "category": "Utility",
       "copyright": "",
       "deb": {
         "depends": []
