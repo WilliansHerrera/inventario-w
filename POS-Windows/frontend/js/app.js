@@ -3,17 +3,28 @@ function posApp() {
         db: null,
         isOnline: navigator.onLine,
         isSyncing: false,
+        showSuccess: false,
+        showSettings: false,
         searchQuery: '',
         products: [],
         filteredProducts: [],
         cart: [],
-        showSuccess: false,
         
-        // Config: Cambiar a la URL de tu servidor Laravel
-        API_BASE: 'http://localhost:8000/api/v1', 
-        LOCAL_ID: 1, // ID del Local/Sucursal
+        // Configuración persistente
+        config: {
+            API_BASE: 'http://localhost:8000/api/v1',
+            SYNC_TOKEN: '',
+            LOCAL_ID: 1,
+            CAJA_ID: 1
+        },
 
         async init() {
+            // Cargar configuración guardada
+            const savedConfig = localStorage.getItem('pos_config');
+            if (savedConfig) {
+                this.config = JSON.parse(savedConfig);
+            }
+
             window.addEventListener('online', () => this.isOnline = true);
             window.addEventListener('offline', () => this.isOnline = false);
 
@@ -52,14 +63,22 @@ function posApp() {
                 // Sincronización automática de fondo
                 setInterval(() => this.backgroundSync(), 30000); // Cada 30 seg
                 
-                if (this.isOnline) {
+                if (this.isOnline && this.config.SYNC_TOKEN) {
                     await this.forceSync();
                 }
 
             } catch (e) {
                 console.error("Error inicializando POS:", e);
-                // Fallback para desarrollo fuera de Tauri (mock)
                 this.products = []; 
+            }
+        },
+
+        saveSettings() {
+            localStorage.setItem('pos_config', JSON.stringify(this.config));
+            this.showSettings = false;
+            // Intentar sincronizar después de guardar
+            if (this.isOnline && this.config.SYNC_TOKEN) {
+                this.forceSync();
             }
         },
 
@@ -103,7 +122,7 @@ function posApp() {
 
             const sale = {
                 local_uuid: crypto.randomUUID(),
-                caja_id: 1, // Caja por defecto
+                caja_id: this.config.CAJA_ID,
                 metodo_pago: 'efectivo',
                 total: this.total(),
                 items: JSON.stringify(this.cart.map(i => ({ id: i.id, qty: i.qty, price: i.precio_venta }))),
@@ -123,18 +142,24 @@ function posApp() {
             this.showSuccess = true;
 
             // 3. Intentar subir inmediatamente si hay internet
-            if (this.isOnline) {
+            if (this.isOnline && this.config.SYNC_TOKEN) {
                 this.backgroundSync();
             }
         },
 
         async forceSync() {
-            if (!this.isOnline || this.isSyncing) return;
+            if (!this.isOnline || this.isSyncing || !this.config.SYNC_TOKEN) return;
             this.isSyncing = true;
             
             try {
                 // Descargar productos actualizados
-                const res = await fetch(`${this.API_BASE}/sync/products?locale_id=${this.LOCAL_ID}`);
+                const res = await fetch(`${this.config.API_BASE}/sync/products?locale_id=${this.config.LOCAL_ID}&caja_id=${this.config.CAJA_ID}`, {
+                    headers: {
+                        'X-Sync-Token': this.config.SYNC_TOKEN,
+                        'Accept': 'application/json'
+                    }
+                });
+                
                 const result = await res.json();
                 
                 if (result.success && this.db) {
@@ -146,6 +171,8 @@ function posApp() {
                         );
                     }
                     await this.loadLocalProducts();
+                } else if (result.error) {
+                    console.error("Sync error:", result.error);
                 }
             } catch (e) {
                 console.error("Sync products failed:", e);
@@ -155,7 +182,7 @@ function posApp() {
         },
 
         async backgroundSync() {
-            if (!this.isOnline || this.isSyncing || !this.db) return;
+            if (!this.isOnline || this.isSyncing || !this.db || !this.config.SYNC_TOKEN) return;
             
             const pending = await this.db.select("SELECT * FROM pending_sales LIMIT 10");
             if (pending.length === 0) return;
@@ -168,9 +195,13 @@ function posApp() {
                     items: JSON.parse(s.items)
                 }));
 
-                const res = await fetch(`${this.API_BASE}/sync/sales`, {
+                const res = await fetch(`${this.config.API_BASE}/sync/sales`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Sync-Token': this.config.SYNC_TOKEN,
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({ sales: salesToUpload })
                 });
 
