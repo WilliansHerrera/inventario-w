@@ -17,6 +17,7 @@ function posApp() {
             LOCAL_ID: 1,
             CAJA_ID: 1
         },
+        importConfig: '',
 
         async init() {
             // Cargar configuración guardada
@@ -76,9 +77,25 @@ function posApp() {
         saveSettings() {
             localStorage.setItem('pos_config', JSON.stringify(this.config));
             this.showSettings = false;
+            this.importConfig = '';
             // Intentar sincronizar después de guardar
             if (this.isOnline && this.config.SYNC_TOKEN) {
                 this.forceSync();
+            }
+        },
+
+        handleImport() {
+            try {
+                const data = JSON.parse(this.importConfig);
+                if (data.API_BASE) this.config.API_BASE = data.API_BASE;
+                if (data.SYNC_TOKEN) this.config.SYNC_TOKEN = data.SYNC_TOKEN;
+                if (data.LOCAL_ID) this.config.LOCAL_ID = data.LOCAL_ID;
+                if (data.CAJA_ID) this.config.CAJA_ID = data.CAJA_ID;
+                
+                // Limpiar el campo después de una importación exitosa si se desea, 
+                // o dejarlo para confirmación.
+            } catch (e) {
+                // Ignorar errores parciales mientras el usuario pega
             }
         },
 
