@@ -25,14 +25,6 @@ class MoonShineServiceProvider extends ServiceProvider
      */
     public function boot(CoreContract $core): void
     {
-        $settings = \App\Models\GlobalSetting::first();
-
-        if ($settings) {
-            if ($settings->theme_palette) {
-                config(['moonshine.palette' => $settings->theme_palette]);
-            }
-        }
-
         $core
             ->resources([
                 MoonShineUserResource::class,
@@ -49,6 +41,7 @@ class MoonShineServiceProvider extends ServiceProvider
                 ...$core->getConfig()->getPages(),
                 \App\MoonShine\Pages\POS::class,
                 \App\MoonShine\Pages\BackupPage::class,
+                \App\MoonShine\Pages\SystemUpdatePage::class,
             ])
         ;
     }

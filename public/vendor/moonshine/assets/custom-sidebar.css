@@ -9,51 +9,60 @@
     --sidebar-real-width: var(--sidebar-width);
 }
 
-/* SIDEBAR BASE */
-.layout-menu {
-    width: var(--sidebar-real-width) !important;
-    transition: width 0.2s ease, transform 0.2s ease;
-    position: relative;
+/* SIDEBAR BASE - SOLO EN ESCRITORIO */
+@media (min-width: 1024px) {
+    .layout-menu {
+        width: var(--sidebar-real-width) !important;
+        transition: width 0.2s ease, transform 0.2s ease;
+        position: relative;
+    }
+
+    /* CUANDO ESTÁ MINIMIZADO (Modo Iconos) */
+    .layout-menu._is-minimized {
+        width: var(--sidebar-collapsed-width) !important;
+    }
+
+    /* Ocultar textos cuando está minimizado */
+    .layout-menu._is-minimized .menu-text,
+    .layout-menu._is-minimized .menu-arrow,
+    .layout-menu._is-minimized .menu-inner-item-title {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    .layout-menu._is-minimized .menu-link {
+        justify-content: center !important;
+        padding: 0.75rem 0 !important;
+    }
+
+    /* RESIZE HANDLER (El "palito" para arrastrar) */
+    .sidebar-resizer {
+        position: absolute;
+        top: 0;
+        right: -3px;
+        width: 6px;
+        height: 100%;
+        cursor: col-resize;
+        z-index: 50;
+        transition: background-color 0.2s;
+    }
+
+    .sidebar-resizer:hover,
+    .sidebar-resizer.is-dragging {
+        background-color: rgba(99, 102, 241, 0.3);
+    }
 }
 
-/* CUANDO ESTÁ MINIMIZADO (Modo Iconos) */
-.layout-menu._is-minimized {
-    width: var(--sidebar-collapsed-width) !important;
-}
-
-/* Ajustes de Contenedor General */
+/* Ajustes de Contenedor General - Siempre activos para maximizar espacio */
 .layout-page .container {
     max-width: 100% !important;
     padding-left: 10px !important;
     padding-right: 10px !important;
 }
 
-/* RESIZE HANDLER (El "palito" para arrastrar) */
-.sidebar-resizer {
-    position: absolute;
-    top: 0;
-    right: -3px;
-    width: 6px;
-    height: 100%;
-    cursor: col-resize;
-    z-index: 50;
-    transition: background-color 0.2s;
-}
-
-.sidebar-resizer:hover,
-.sidebar-resizer.is-dragging {
-    background-color: rgba(99, 102, 241, 0.3);
-}
-
-/* Ocultar textos cuando está minimizado */
-.layout-menu._is-minimized .menu-text,
-.layout-menu._is-minimized .menu-arrow,
-.layout-menu._is-minimized .menu-inner-item-title {
-    display: none !important;
-    visibility: hidden !important;
-}
-
-.layout-menu._is-minimized .menu-link {
-    justify-content: center !important;
-    padding: 0.75rem 0 !important;
+/* En móviles ocultar el resizer */
+@media (max-width: 1023px) {
+    .sidebar-resizer {
+        display: none !important;
+    }
 }

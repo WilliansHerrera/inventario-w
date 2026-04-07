@@ -8,6 +8,7 @@ use App\Models\Inventario;
 use App\Models\Venta;
 use App\Models\VentaDetalle;
 use App\Models\Producto;
+use App\Models\PosVersion;
 use App\Services\InventoryService;
 use App\Services\CashRegisterService;
 use Illuminate\Http\Request;
@@ -22,6 +23,32 @@ class SyncController extends Controller
     ) {}
 
     /**
+     * Check for POS updates (Tauri format)
+     */
+    public function checkUpdate(Request $request)
+    {
+        $version = PosVersion::where('is_latest', true)->first();
+
+        if (!$version) {
+            return response()->json([], 204); // No update
+        }
+
+        $url = url('storage/' . $version->filename);
+
+        return response()->json([
+            'version'  => $version->version,
+            'notes'    => $version->changelog,
+            'pub_date' => $version->release_date ? $version->release_date->toRfc3339String() : $version->created_at->toRfc3339String(),
+            'platforms' => [
+                'windows-x86_64' => [
+                    'signature' => '', // TODO: Implement signatures if needed
+                    'url'       => $url,
+                ]
+            ]
+        ]);
+    }
+
+    /**
      * Get products for local sync.
      * Optionally filtered by locale_id.
      */
@@ -32,8 +59,8 @@ class SyncController extends Controller
         $token    = $request->header('X-Sync-Token');
 
         if ($cajaId) {
-            $caja = Caja::find($cajaId);
-            if (!$caja || $caja->sync_token !== $token) {
+            $caja = Caja::with('sucursal')->find($cajaId);
+            if (!$caja || !$caja->sucursal || $caja->sucursal->sync_token !== $token) {
                 return response()->json(['success' => false, 'error' => 'Token de sincronización inválido o caja no encontrada.'], 401);
             }
         }
@@ -90,9 +117,9 @@ class SyncController extends Controller
 
         foreach ($request->sales as $saleData) {
             try {
-                $caja = Caja::findOrFail($saleData['caja_id']);
+                $caja = Caja::with('sucursal')->findOrFail($saleData['caja_id']);
 
-                if ($caja->sync_token !== $token) {
+                if (!$caja->sucursal || $caja->sucursal->sync_token !== $token) {
                     throw new \Exception("Token inválido para la caja {$caja->id}");
                 }
 

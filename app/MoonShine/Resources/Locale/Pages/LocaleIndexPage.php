@@ -34,6 +34,28 @@ class LocaleIndexPage extends IndexPage
             Text::make('Nombre', 'nombre')->sortable()->required(),
             Text::make('Dirección', 'direccion'),
             Text::make('Teléfono', 'telefono'),
+            Text::make('Token POS (Sucursal)', 'sync_token')
+                ->changePreview(fn($value) => \MoonShine\UI\Components\Badge::make($value ?? '', 'primary')
+                    ->customAttributes([
+                        'x-data' => '{}',
+                        'class' => 'cursor-pointer',
+                        '@click' => "window.navigator.clipboard.writeText('{$value}'); \$dispatch('toast', {type: 'success', text: 'Token Copiado!'})"
+                    ])
+                ),
+            Text::make('Configuración JSON', 'id')
+                ->changePreview(function($value, \MoonShine\UI\Fields\Text $ctx) {
+                    $item = $ctx->getData();
+                    if ($item instanceof \MoonShine\Contracts\Core\TypeCasts\DataWrapperContract) {
+                        $item = $item->getOriginal();
+                    }
+                    $jsonContent = base64_encode($item->getConfigJson());
+                    return \MoonShine\UI\Components\Badge::make('Copiar Configuración', 'success')
+                        ->customAttributes([
+                            'x-data' => '{}',
+                            'class' => 'cursor-pointer',
+                            '@click' => "window.navigator.clipboard.writeText('{$jsonContent}'); \$dispatch('toast', {type: 'success', text: '¡Configuración de Sucursal Copiada!'})"
+                        ]);
+                }),
         ];
     }
 
@@ -83,6 +105,10 @@ class LocaleIndexPage extends IndexPage
     protected function topLayer(): array
     {
         return [
+            \MoonShine\UI\Components\Alert::make(
+                icon: 'computer-desktop',
+                type: 'primary',
+            )->content('Para instalar terminales POS, descarga "POS-Setup.exe" y usa "Copiar Configuración" para cada sucursal respectiva.'),
             ...parent::topLayer()
         ];
     }

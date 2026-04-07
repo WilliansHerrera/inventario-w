@@ -23,6 +23,7 @@ use MoonShine\Laravel\Resources\MoonShineUserRoleResource;
 use App\MoonShine\Resources\Venta\VentaResource;
 use App\MoonShine\Resources\VentaDetalle\VentaDetalleResource;
 use App\MoonShine\Resources\GlobalSetting\GlobalSettingResource;
+use App\MoonShine\Pages\SystemUpdatePage;
 use App\MoonShine\Pages\POS;
 use App\MoonShine\Pages\BackupPage;
 
@@ -113,6 +114,7 @@ final class MoonShineLayout extends AppLayout
             ])->icon('lock-closed'),
 
             MenuGroup::make('Sistema', [
+                MenuItem::make(SystemUpdatePage::class, 'Actualizaciones (Web/POS)')->icon('cloud-arrow-up'),
                 MenuItem::make(BackupPage::class, 'Copias de Seguridad (Backup)')->icon('circle-stack'),
                 MenuItem::make(fn() => route('admin.pos.download'), 'Descargar Terminal POS (EXE)')
                     ->icon('arrow-down-tray')
@@ -128,8 +130,9 @@ final class MoonShineLayout extends AppLayout
     {
         parent::colors($colorManager);
 
-        $paletteClass = get_global_setting('theme_palette', \MoonShine\ColorManager\Palettes\PurplePalette::class);
-        if (class_exists($paletteClass)) {
+        $paletteClass = get_global_setting('theme_palette');
+        
+        if ($paletteClass && class_exists($paletteClass)) {
             $palette = new $paletteClass();
             if ($palette instanceof \MoonShine\Contracts\ColorManager\PaletteContract) {
                 $colorManager->palette($palette);

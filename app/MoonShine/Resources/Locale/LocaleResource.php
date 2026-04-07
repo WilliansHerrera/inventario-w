@@ -35,4 +35,24 @@ class LocaleResource extends ModelResource
             LocaleDetailPage::class,
         ];
     }
+
+    protected function indexButtons(): array
+    {
+        return [
+            \MoonShine\UI\Components\ActionButton::make('Regenerar Token', fn($item) => route('admin.locale.regenerate-token', $item))
+                ->icon('arrow-path')
+                ->warning()
+                ->withConfirm(
+                    '¿Generar nuevo Token?', 
+                    'Esto desconectará de inmediato cualquier Terminal POS de esta sucursal que use el token actual. Tendrás que reconfigurar las terminales con el nuevo token. ¿Continuar?'
+                )
+                ->async(\MoonShine\Support\Enums\HttpMethod::POST),
+
+            \MoonShine\UI\Components\ActionButton::make('Descargar Config', fn($item) => route('admin.locale.download-config', $item))
+                ->icon('arrow-down-tray')
+                ->primary()
+                ->blank()
+
+        ];
+    }
 }

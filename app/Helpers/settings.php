@@ -6,15 +6,22 @@ use Illuminate\Support\Facades\Cache;
 if (!function_exists('get_global_setting')) {
     function get_global_setting(string $key, mixed $default = null): mixed
     {
-        $settings = Cache::rememberForever('global_settings', function () {
-            return GlobalSetting::first();
-        });
+        try {
+            $settings = Cache::rememberForever('global_settings', function () {
+                if (!\Illuminate\Support\Facades\Schema::hasTable('global_settings')) {
+                    return null;
+                }
+                return GlobalSetting::first();
+            });
 
-        if (!$settings) {
+            if (!$settings) {
+                return $default;
+            }
+
+            return $settings->{$key} ?? $default;
+        } catch (\Exception $e) {
             return $default;
         }
-
-        return $settings->{$key} ?? $default;
     }
 }
 

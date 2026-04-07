@@ -29,7 +29,6 @@ class CajaIndexPage extends IndexPage
                 ->sortable()
                 ->changePreview(fn($value) => format_currency((float) $value)),
             Switcher::make('Abierta', 'abierta'),
-            Text::make('Token de Sincronización', 'sync_token')->readonly(),
         ];
     }
 }

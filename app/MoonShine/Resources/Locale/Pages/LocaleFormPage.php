@@ -30,6 +30,9 @@ class LocaleFormPage extends FormPage
             Text::make('Nombre', 'nombre')->required(),
             Text::make('Dirección', 'direccion'),
             Text::make('Teléfono', 'telefono'),
+            Text::make('Token de Sincronización', 'sync_token')
+                ->readonly()
+                ->hint('Utilizado por la aplicación POS para sincronización.'),
         ];
     }
 

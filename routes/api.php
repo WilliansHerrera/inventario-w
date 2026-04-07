@@ -7,4 +7,5 @@ use App\Http\Controllers\Api\SyncController;
 Route::prefix('v1')->group(function () {
     Route::get('/sync/products', [SyncController::class, 'products']);
     Route::post('/sync/sales', [SyncController::class, 'sales']);
+    Route::get('/update/check', [SyncController::class, 'checkUpdate']);
 });

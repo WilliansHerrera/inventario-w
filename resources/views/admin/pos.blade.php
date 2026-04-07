@@ -15,7 +15,7 @@
     x-data="pos()"
     x-init="init()"
     @keydown.window="handleKey($event)"
-    class="flex flex-col w-full bg-slate-50 text-slate-800 h-screen lg:h-full overflow-hidden font-[Inter,sans-serif]"
+    class="flex flex-col w-full bg-slate-50 text-slate-800 min-h-screen lg:min-h-0 lg:h-[calc(100vh-4rem)] overflow-y-auto lg:overflow-hidden font-[Inter,sans-serif]"
 >
     {{-- ══════════════════════════════════════ --}}
     {{-- HEADER (Premium styled)                --}}
@@ -687,23 +687,25 @@ function pos() {
         height: 2.75rem !important;
         margin: 0.5rem auto !important;
     }
-    /* Maximizando el área de trabajo POS */
-    .layout-page,
-    .layout-main,
-    .layout-main-centered,
-    .layout-content,
-    .layout-wrapper,
-    #_moonshine-content,
-    .container-fluid,
-    .container {
-        max-width: none !important;
-        width: 100% !important;
-        padding-right: 0 !important;
-        margin-right: 0 !important;
-    }
-    
-    .layout-main-centered {
-        margin: 0 !important;
+    /* Maximizando el área de trabajo POS - SOLO EN ESCRITORIO */
+    @media (min-width: 1024px) {
+        .layout-page,
+        .layout-main,
+        .layout-main-centered,
+        .layout-content,
+        .layout-wrapper,
+        #_moonshine-content,
+        .container-fluid,
+        .container {
+            max-width: none !important;
+            width: 100% !important;
+            padding-right: 0 !important;
+            margin-right: 0 !important;
+        }
+        
+        .layout-main-centered {
+            margin: 0 !important;
+        }
     }
 
 </style>

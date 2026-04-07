@@ -6,18 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Caja extends Model
 {
-    protected $fillable = ['nombre', 'locale_id', 'saldo', 'abierta', 'sync_token'];
-
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($caja) {
-            if (empty($caja->sync_token)) {
-                $caja->sync_token = \Illuminate\Support\Str::random(32);
-            }
-        });
-    }
+    protected $fillable = ['nombre', 'locale_id', 'saldo', 'abierta'];
 
     public function sucursal()
     {
@@ -27,5 +16,10 @@ class Caja extends Model
     public function movimientos()
     {
         return $this->hasMany(CajaMovimiento::class);
+    }
+
+    public function terminales()
+    {
+        return $this->hasMany(TerminalPos::class);
     }
 }

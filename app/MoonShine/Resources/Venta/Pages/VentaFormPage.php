@@ -57,7 +57,6 @@ class VentaFormPage extends FormPage
                         ->hint(get_currency_symbol() . ' ' . get_global_setting('currency_code')),
                 ])
                 ->creatable()
-                ->removable()
         ];
     }
 

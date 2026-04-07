@@ -30,9 +30,6 @@ class CajaFormPage extends FormPage
                 ->default(0)
                 ->hint(get_currency_symbol() . ' ' . get_global_setting('currency_code')),
             Switcher::make('Abierta', 'abierta')->default(false),
-            Text::make('Token de Sincronización', 'sync_token')
-                ->readonly()
-                ->hint('Usa este token para configurar la terminal POS de Windows.'),
         ];
     }
 }

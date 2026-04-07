@@ -61,7 +61,11 @@
       "csp": null
     },
     "updater": {
-      "active": false
+      "active": true,
+      "endpoints": [
+          "{{API_BASE}}/update/check"
+      ],
+      "dialog": true
     },
     "windows": [
       {

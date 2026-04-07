@@ -10,6 +10,7 @@ use App\MoonShine\Resources\GlobalSetting\GlobalSettingResource;
 use MoonShine\UI\Fields\Select;
 use MoonShine\UI\Fields\Text;
 use MoonShine\UI\Fields\ID;
+use MoonShine\UI\Fields\Switcher;
 use MoonShine\ColorManager\Palettes\PurplePalette;
 use MoonShine\ColorManager\Palettes\CyanPalette;
 use MoonShine\ColorManager\Palettes\GreenPalette;
@@ -135,6 +136,35 @@ class GlobalSettingFormPage extends FormPage
             \MoonShine\UI\Fields\Number::make('Margen de Ganancia Por Defecto (%)', 'margen_defecto')
                 ->default(25)
                 ->required(),
+
+            \MoonShine\UI\Components\Layout\Divider::make('Configuración Global App Windows'),
+
+            Switcher::make('Modo Kiosko por Defecto', 'win_kiosk_mode')
+                ->hint('Obligar a la App de Windows a iniciar en pantalla completa'),
+
+            Switcher::make('Modo Desarrollo por Defecto', 'win_debug_mode')
+                ->hint('Permite ver herramientas de desarrollador en la App'),
+
+            \MoonShine\UI\Fields\Number::make('Intervalo Sincronización (Segundos)', 'win_sync_interval')
+                ->default(60)
+                ->required()
+                ->hint('Tiempo entre actualizaciones de datos en modo offline'),
+
+            Switcher::make('Auto-actualizar App', 'win_auto_actualizar')
+                ->default(true),
+
+            Text::make('Versión Mínima Requerida', 'win_min_version')
+                ->default('1.0.0')
+                ->hint('Bloquea el acceso a versiones anteriores a esta'),
+
+            Switcher::make('Iniciar con Windows', 'win_auto_inicio')
+                ->default(true),
+
+            Text::make('Ruta de Datos por Defecto', 'win_default_ruta_datos')
+                ->default('C:\POS\Data')
+                ->hint('Donde la App de escritorio guardará la base de datos local'),
+
+            \MoonShine\UI\Components\Layout\Divider::make('Ajustes del Ticket (Recibo)'),
 
             \MoonShine\UI\Fields\Textarea::make('Cabecera del Ticket', 'receipt_header')
                 ->hint('Texto superior del ticket (Ej: Nombre Tienda, Dirección, RFC)'),
