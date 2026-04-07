@@ -8,66 +8,46 @@
 ---
 
 ## 🌟 Overview
-**Inventario-w** is a high-performance, industrial-grade Point of Sale (POS) and Inventory Management system designed for efficiency and scalability. Built on the cutting-edge **Laravel 12** framework and powered by the **MoonShine 4** admin panel, it provides a seamless experience for managing sales, stock, and business operations.
-
-Developed with a focus on **speed, reliability, and modern aesthetics**, this system is tailored for businesses that require robust inventory tracking across multiple locations.
+**Inventario-w** is a high-performance, industrial-grade Point of Sale (POS) and Inventory Management system. Built on **Laravel 12** and **MoonShine 4**, it offers a complete ecosystem for modern businesses, combining a robust web administrative panel with lightweight native Windows terminals.
 
 ---
 
 ## 🛠️ Tech Stack
-- **Framework:** [Laravel 12.x](https://laravel.com)
+- **Web Framework:** [Laravel 12.x](https://laravel.com)
 - **Admin Panel:** [MoonShine 4.x](https://moonshine-laravel.com)
-- **Frontend Tooling:** Vite + Alpine.js
-- **Database:** MySQL / PostgreSQL / SQLite
-- **Language:** PHP 8.2+
+- **Desktop Engine:** [Tauri 2.0](https://tauri.app) (Rust + JavaScript)
+- **Mobile Support:** Android App (Kotlin + Jetpack Compose)
+- **Database:** MySQL (Cloud) + SQLite (Local Edge Sync)
 
 ---
 
 ## ✨ Key Features
 
-### 🛒 Advanced POS Module (Industrial V7)
+### 🛒 Industrial POS (Web & Win)
 - **High-Speed Search:** Instant product lookup by Name, SKU, or Barcode.
-- **Smart Numpad Integration:** Optimized for rapid keyboard-first data entry.
-- **Real-time Stock Validation:** Prevents selling items without sufficient inventory in the specific branch.
-- **Thermal Printing:** Automated receipt generation with customizable headers and footers.
+- **Offline-First (Win):** Native Windows terminal works without internet, syncing automatically.
+- **Smart Numpad:** Optimized for rapid, keyboard-only operation in physical stores.
+- **Thermal Printing:** Professional receipts with customizable branding.
 
-### 📦 Inventory & Logistics
-- **Multi-Locale Support:** Manage stock levels independently across different warehouses or stores.
-- **Automated Calculations:** Real-time stock adjustment upon sale completion.
-- **SKU & Barcode Support:** Standardized product identification.
+### 📦 Inventory Control
+- **Multi-Locale Management:** Independent stock levels for branches, warehouses, or delivery trucks.
+- **Low-Stock Alerts:** Real-time monitoring and visual indicators.
 
-### 💰 Financial Management
-- **Global Currency System:** Automatically formats prices based on your region's settings.
-- **Cash Register (Cajas):** Track sales sessions, balances, and user-specific transactions.
-- **Sales Analytics:** Comprehensive reports on sales performance and revenue.
-
-### 🖥️ Native Windows Terminal (Beta)
-- **Offline-First:** Funciona sin internet usando SQLite local.
-- **Sincronización Inteligente:** Sincroniza productos y ventas automáticamente al detectar conexión.
-- **Ultra-Ligera:** App nativa construida con Tauri (~10MB).
-- **Seguridad por Token:** Cada terminal se autentica con su propio token único.
-
----
-
-## ⚙️ Global Configuration
-- **Customizable Branding:** Easily update your business logo, receipt headers, and footers.
-- **Regional Settings:** Configure default currency, decimal precision, and language.
+### ⚙️ Automation & Updates (New)
+- **GitHub Update Center:** Direct integration with GitHub API to monitor commits and releases.
+- **One-Click Web Update:** Execute `git pull` and database migrations directly from the admin panel.
+- **POS Release Sync:** Automatically fetch and manage `.exe` installers from GitHub Releases.
+- **Dynamic Themes:** UI customization with real-time palette switching (Green, Cyan, Purple, etc.) from global settings.
 
 ---
 
 ## 🚀 Getting Started
 
-### Prerequisites
-- PHP >= 8.2
-- Composer
-- Node.js & NPM
-- MySQL or alternative database
-
 ### Installation
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/williansh/inventario-w.git
+   git clone https://github.com/WilliansHerrera/inventario-w.git
    cd inventario-w
    ```
 
@@ -77,40 +57,34 @@ Developed with a focus on **speed, reliability, and modern aesthetics**, this sy
    npm install
    ```
 
-3. **Environment Setup:**
+3. **Environment setup:**
    ```bash
    cp .env.example .env
    php artisan key:generate
    ```
 
-4. **Database Configuration:**
-   Configure your `.env` file with your database credentials and run migrations:
+4. **Migrations & Seeders:**
    ```bash
    php artisan migrate --seed
    ```
 
-5. **Build Assets:**
-   ```bash
-   npm run build
-   ```
-
-6. **Serve the Application:**
+5. **Run the server:**
    ```bash
    php artisan serve
    ```
 
 ### 🖥️ Windows Terminal Build
-El instalador `.exe` se genera automáticamente mediante **GitHub Actions** al subir cambios. También puedes compilarlo localmente:
-1. Ve a la carpeta `POS-Windows`.
-2. Ejecuta `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass; .\build.ps1`.
+The installer is generated via **GitHub Actions**. To build locally:
+1. Go to `POS-Windows` folder.
+2. Run `.\build.ps1`.
 
 ---
 
 ## 👤 Author
 **Willians Herrera**
-- 📧 Email: [williansherrera@gmail.com](mailto:williansherrera@gmail.com)
-- 💼 Professional Web Developer
-- 🎯 Focused on Industrial Software Solutions
+- 📧 [williansherrera@gmail.com](mailto:williansherrera@gmail.com)
+- 💼 Freelance Full-Stack Developer
+- 🎯 Specialized in Industrial POS & AI Solutions
 
 ---
 
