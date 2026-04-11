@@ -14,9 +14,11 @@ use MoonShine\UI\Components\ActionButton;
 use MoonShine\UI\Components\Heading;
 use MoonShine\UI\Components\Table\TableBuilder;
 use App\Services\GitHubUpdateService;
+use App\Models\PosVersion;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Cache;
 use MoonShine\UI\Fields\Text;
+use MoonShine\UI\Components\Badge;
 
 class SystemUpdatePage extends Page
 {
@@ -31,6 +33,7 @@ class SystemUpdatePage extends Page
         $service->syncCurrentLocalVersion(); // Autopoblar si está vacío
 
         $commits = Cache::remember('web_latest_commits', 3600, fn() => $service->getWebLatestCommits());
+        $posVersions = PosVersion::orderBy('release_date', 'desc')->get();
         
         // Obtener versión actual local (git hash)
         $currentCommit = "Desconocido";
@@ -75,11 +78,22 @@ class SystemUpdatePage extends Page
                         Heading::make('Control de Versiones de Ejecutables')->h(4),
                         LineBreak::make(),
                         
-                        \MoonShine\UI\Components\FlexibleRender::make('Gestiona los archivos .exe que descargan las sucursales. El sistema sincroniza automáticamente las versiones desde los "Releases" de GitHub.'),
+                        \MoonShine\UI\Components\FlexibleRender::make('Gestiona las versiones que las terminales descargarán automáticamente.'),
                         
                         LineBreak::make(),
+                        TableBuilder::make()
+                            ->items($posVersions)
+                            ->fields([
+                                Text::make('Versión', 'version'),
+                                Text::make('Estado', 'is_latest', fn($v) => $v->is_latest 
+                                    ? Badge::make('ACTUAL', 'success') 
+                                    : Badge::make('Antigua', 'gray')),
+                                Text::make('Fecha', 'release_date', fn($v) => $v->release_date ? $v->release_date->format('d/m/Y') : 'N/A'),
+                            ]),
+
+                        LineBreak::make(),
                         Flex::make([
-                            ActionButton::make('Sincronizar Releases', fn() => route('admin.pos.sync-github'))
+                            ActionButton::make('Sincronizar GitHub', fn() => route('admin.pos.sync-github'))
                                 ->success()
                                 ->icon('hashtag'),
                         ])->justifyAlign('start'),

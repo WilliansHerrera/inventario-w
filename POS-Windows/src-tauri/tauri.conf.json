@@ -63,7 +63,7 @@
     "updater": {
       "active": true,
       "endpoints": [
-          "{{API_BASE}}/update/check"
+          "http://localhost/Inventario-w/public/api/update/check"
       ],
       "dialog": true
     },

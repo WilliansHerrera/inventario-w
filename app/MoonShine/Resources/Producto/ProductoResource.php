@@ -11,6 +11,7 @@ use App\MoonShine\Resources\Producto\Pages\ProductoDetailPage;
 
 use MoonShine\Laravel\Resources\ModelResource;
 use MoonShine\Contracts\Core\PageContract;
+use MoonShine\UI\Components\ActionButton;
 
 /**
  * @extends ModelResource<Producto, ProductoIndexPage, ProductoFormPage, ProductoDetailPage>
@@ -33,5 +34,24 @@ class ProductoResource extends ModelResource
             ProductoFormPage::class,
             ProductoDetailPage::class,
         ];
+    }
+
+    public function indexButtons(): array
+    {
+        return [
+            ActionButton::make(
+                '',
+                fn(Producto $item) => route('admin.products.barcode', $item)
+            )
+            ->icon('barcode')
+            ->blank()
+            ->primary()
+            ->customAttributes(['title' => 'Imprimir Código de Barras'])
+        ];
+    }
+
+    public function detailButtons(): array
+    {
+        return $this->indexButtons();
     }
 }

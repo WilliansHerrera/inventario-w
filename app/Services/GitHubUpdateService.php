@@ -92,14 +92,21 @@ class GitHubUpdateService
             $config = json_decode(File::get($path), true);
             $versionNum = $config['package']['version'] ?? '1.0.0';
 
-            PosVersion::firstOrCreate(
-                ['version' => $versionNum],
-                [
-                    'changelog' => 'Versión inicial detectada desde el código fuente.',
-                    'is_latest' => true,
-                    'release_date' => now()
-                ]
-            );
+            // Verificamos si ya existe esta versión
+            $exists = PosVersion::where('version', $versionNum)->exists();
+
+            if (!$exists) {
+                // Si no existe, la creamos y la marcamos como latest si no hay ninguna otra latest
+                $hasLatest = PosVersion::where('is_latest', true)->exists();
+                
+                PosVersion::create([
+                    'version'      => $versionNum,
+                    'changelog'    => 'Versión detectada localmente (Código Fuente).',
+                    'is_latest'    => !$hasLatest,
+                    'release_date' => now(),
+                    'filename'     => 'POS-Setup.exe' // Default local name
+                ]);
+            }
         }
     }
 }

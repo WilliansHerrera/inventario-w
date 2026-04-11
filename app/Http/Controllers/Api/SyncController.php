@@ -27,13 +27,16 @@ class SyncController extends Controller
      */
     public function checkUpdate(Request $request)
     {
-        $version = PosVersion::where('is_latest', true)->first();
+        $version = PosVersion::where('is_latest', true)->orderBy('created_at', 'desc')->first();
 
         if (!$version) {
-            return response()->json([], 204); // No update
+            return response()->json([], 204); // No update content
         }
 
-        $url = url('storage/' . $version->filename);
+        // Si el filename ya es una URL (GitHub), la usamos directamente
+        $url = filter_var($version->filename, FILTER_VALIDATE_URL) 
+            ? $version->filename 
+            : url('storage/' . $version->filename);
 
         return response()->json([
             'version'  => $version->version,
@@ -41,7 +44,15 @@ class SyncController extends Controller
             'pub_date' => $version->release_date ? $version->release_date->toRfc3339String() : $version->created_at->toRfc3339String(),
             'platforms' => [
                 'windows-x86_64' => [
-                    'signature' => '', // TODO: Implement signatures if needed
+                    'signature' => '', // TODO: Implementar firmas si se activa en Tauri
+                    'url'       => $url,
+                ],
+                'linux-x86_64' => [
+                    'signature' => '',
+                    'url'       => $url,
+                ],
+                'darwin-x86_64' => [
+                    'signature' => '',
                     'url'       => $url,
                 ]
             ]
@@ -54,16 +65,7 @@ class SyncController extends Controller
      */
     public function products(Request $request)
     {
-        $localeId = $request->get('locale_id');
-        $cajaId   = $request->get('caja_id');
-        $token    = $request->header('X-Sync-Token');
-
-        if ($cajaId) {
-            $caja = Caja::with('sucursal')->find($cajaId);
-            if (!$caja || !$caja->sucursal || $caja->sucursal->sync_token !== $token) {
-                return response()->json(['success' => false, 'error' => 'Token de sincronización inválido o caja no encontrada.'], 401);
-            }
-        }
+        $localeId = $request->header('X-Sync-ID');
         
         $query = Inventario::with('producto');
         
@@ -97,8 +99,6 @@ class SyncController extends Controller
      */
     public function sales(Request $request)
     {
-        $token = $request->header('X-Sync-Token');
-
         $request->validate([
             'sales' => 'required|array',
             'sales.*.local_uuid'  => 'required',
@@ -118,10 +118,6 @@ class SyncController extends Controller
         foreach ($request->sales as $saleData) {
             try {
                 $caja = Caja::with('sucursal')->findOrFail($saleData['caja_id']);
-
-                if (!$caja->sucursal || $caja->sucursal->sync_token !== $token) {
-                    throw new \Exception("Token inválido para la caja {$caja->id}");
-                }
 
                 DB::transaction(function () use ($saleData, $caja, &$syncedIds) {
                     // 1. Create Sale

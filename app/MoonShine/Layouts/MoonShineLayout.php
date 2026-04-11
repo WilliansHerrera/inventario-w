@@ -139,4 +139,18 @@ final class MoonShineLayout extends AppLayout
             }
         }
     }
+
+    protected function getFooterCopyright(): string
+    {
+        return \sprintf(
+            <<<'HTML'
+                &copy; %d
+                <a href="#" class="font-semibold text-primary" target="_blank">
+                    Willians Herrera
+                </a>
+                - Inventario-W. Todos los derechos reservados.
+            HTML,
+            now()->year,
+        );
+    }
 }

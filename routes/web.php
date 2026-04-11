@@ -86,3 +86,8 @@ Route::get('/admin/web/update-now', function () {
         return back()->with('toast', 'Fallo en la actualización: ' . $e->getMessage())->danger();
     }
 })->middleware(['web', 'auth:moonshine'])->name('admin.web.update-now');
+
+// Impresión de Código de Barras
+Route::get('/admin/products/barcode/{producto}', [\App\Http\Controllers\Admin\BarcodeController::class, 'print'])
+    ->middleware(['web', 'auth:moonshine'])
+    ->name('admin.products.barcode');

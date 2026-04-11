@@ -9,6 +9,8 @@ function posApp() {
         products: [],
         filteredProducts: [],
         cart: [],
+        barcodeBuffer: '',
+        lastKeyTime: 0,
         
         // Configuración persistente
         config: {
@@ -33,6 +35,46 @@ function posApp() {
 
             window.addEventListener('online', () => this.isOnline = true);
             window.addEventListener('offline', () => this.isOnline = false);
+
+            // Escáner Global: Escuchar teclas en toda la ventana
+            window.addEventListener('keydown', (e) => {
+                // Si el foco está en un input o textarea (que no sea el de búsqueda), dejar que fluya normal
+                const active = document.activeElement;
+                if (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA') {
+                    // Si es el input de búsqueda, procesar normalmente (ya tiene su binding)
+                    if (active.getAttribute('x-model') === 'searchQuery') return;
+                }
+
+                const currentTime = Date.now();
+                const diff = currentTime - this.lastKeyTime;
+                this.lastKeyTime = currentTime;
+
+                // Si se presiona Enter, intentar procesar el buffer
+                if (e.key === 'Enter') {
+                    if (this.barcodeBuffer.length > 2) {
+                        this.processGlobalBarcode(this.barcodeBuffer);
+                        this.barcodeBuffer = '';
+                    }
+                    return;
+                }
+
+                // Detectar velocidad de escaneo (típicamente < 50ms entre teclas)
+                // O si el buffer ya tiene algo, seguir acumulando
+                if (diff < 50 || this.barcodeBuffer.length > 0) {
+                    if (e.key.length === 1) { // Solo caracteres imprimibles
+                        this.barcodeBuffer += e.key;
+                        
+                        // Limpiar buffer si pasa mucho tiempo sin actividad (ej. 500ms)
+                        clearTimeout(this.barcodeTimeout);
+                        this.barcodeTimeout = setTimeout(() => {
+                            this.barcodeBuffer = '';
+                        }, 500);
+                    }
+                } else {
+                    // Si el tiempo es lento, probablemente sea un humano, resetear buffer
+                    this.barcodeBuffer = '';
+                }
+            });
 
             try {
                 // Inicializar SQLite manualmente a nivel nativo (Vanilla JS sin Vite)
@@ -175,12 +217,53 @@ function posApp() {
         },
 
         search() {
-            const q = this.searchQuery.toLowerCase();
+            const q = this.searchQuery.toLowerCase().trim();
             this.filteredProducts = this.products.filter(p => 
                 p.nombre.toLowerCase().includes(q) || 
                 p.sku.toLowerCase().includes(q) || 
-                (p.codigo_barra && p.codigo_barra.includes(q))
+                (p.codigo_barra && p.codigo_barra.toLowerCase().includes(q))
             );
+        },
+
+        processGlobalBarcode(code) {
+            const q = code.toLowerCase().trim();
+            const product = this.products.find(p => 
+                (p.codigo_barra && p.codigo_barra.toLowerCase() === q) || 
+                (p.sku && p.sku.toLowerCase() === q)
+            );
+
+            if (product) {
+                this.addToCart(product);
+                // Opcional: Sonido de éxito o feedback visual
+                console.log("Escaneado:", product.nombre);
+            } else {
+                console.warn("Producto no encontrado:", q);
+            }
+        },
+
+        handleBarcode() {
+            const q = this.searchQuery.trim().toLowerCase();
+            if (!q) return;
+
+            // 1. Prioridad: Coincidencia exacta por Código de Barras o SKU
+            const exactMatch = this.products.find(p => 
+                (p.codigo_barra && p.codigo_barra.toLowerCase() === q) || 
+                (p.sku && p.sku.toLowerCase() === q)
+            );
+
+            if (exactMatch) {
+                this.addToCart(exactMatch);
+                this.searchQuery = '';
+                this.search();
+                return;
+            }
+
+            // 2. Si no hay coincidencia exacta pero solo quedó un producto en el filtro
+            if (this.filteredProducts.length === 1) {
+                this.addToCart(this.filteredProducts[0]);
+                this.searchQuery = '';
+                this.search();
+            }
         },
 
         addToCart(p) {
@@ -233,15 +316,48 @@ function posApp() {
             }
         },
 
+        async generateSignature(method, path, body = '') {
+            const timestamp = Math.floor(Date.now() / 1000).toString();
+            const message = timestamp + method.toUpperCase() + path + body;
+            
+            const encoder = new TextEncoder();
+            const keyData = encoder.encode(this.config.SYNC_TOKEN);
+            const messageData = encoder.encode(message);
+
+            const cryptoKey = await crypto.subtle.importKey(
+                'raw', 
+                keyData, 
+                { name: 'HMAC', hash: 'SHA-256' }, 
+                false, 
+                ['sign']
+            );
+
+            const signatureBuffer = await crypto.subtle.sign(
+                'HMAC', 
+                cryptoKey, 
+                messageData
+            );
+
+            // Convert buffer to hex string
+            const hashArray = Array.from(new Uint8Array(signatureBuffer));
+            const signatureHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+            return { signature: signatureHex, timestamp };
+        },
+
         async forceSync() {
             if (!this.isOnline || this.isSyncing || !this.config.SYNC_TOKEN) return;
             this.isSyncing = true;
             
             try {
-                // Descargar productos actualizados
-                const res = await fetch(`${this.config.API_BASE}/sync/products?locale_id=${this.config.LOCAL_ID}&caja_id=${this.config.CAJA_ID}`, {
+                const path = `/api/v1/sync/products`;
+                const { signature, timestamp } = await this.generateSignature('GET', path);
+
+                const res = await fetch(`${this.config.API_BASE}/sync/products?caja_id=${this.config.CAJA_ID}`, {
                     headers: {
-                        'X-Sync-Token': this.config.SYNC_TOKEN,
+                        'X-Sync-ID': this.config.LOCAL_ID,
+                        'X-Sync-Timestamp': timestamp,
+                        'X-Sync-Signature': signature,
                         'Accept': 'application/json'
                     }
                 });
@@ -299,14 +415,20 @@ function posApp() {
                     items: JSON.parse(s.items)
                 }));
 
+                const body = JSON.stringify({ sales: salesToUpload });
+                const path = `/api/v1/sync/sales`;
+                const { signature, timestamp } = await this.generateSignature('POST', path, body);
+
                 const res = await fetch(`${this.config.API_BASE}/sync/sales`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
-                        'X-Sync-Token': this.config.SYNC_TOKEN,
+                        'X-Sync-ID': this.config.LOCAL_ID,
+                        'X-Sync-Timestamp': timestamp,
+                        'X-Sync-Signature': signature,
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify({ sales: salesToUpload })
+                    body: body
                 });
 
                 const result = await res.json();

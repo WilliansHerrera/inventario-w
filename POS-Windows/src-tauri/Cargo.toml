@@ -1,6 +1,6 @@
 [package]
 name = "pos-windows"
-version = "0.0.0"
+version = "1.0.0"
 description = "Terminal POS para Inventario-W"
 authors = ["Antigravity AI"]
 edition = "2021"

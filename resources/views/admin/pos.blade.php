@@ -159,7 +159,7 @@
 
                             <div class="w-full aspect-square rounded-xl mb-3 overflow-hidden flex items-center justify-center relative group-hover:brightness-95 transition-all">
                                 <template x-if="p.imagen">
-                                    <img :src="'/storage/' + p.imagen" class="w-full h-full object-cover">
+                                    <img :src="baseUrl + 'storage/' + p.imagen" class="w-full h-full object-cover">
                                 </template>
                                 <template x-if="!p.imagen">
                                     <div
@@ -470,6 +470,7 @@
 <script>
 function pos() {
     return {
+        baseUrl:     '{{ asset("/") }}',
         cajaId:      null,
         cajaLocaleId: null,
         cajaNombre:  '',
@@ -531,8 +532,7 @@ function pos() {
             if (!this.cajaId) return;
             this.loading     = true;
             try {
-                const base = window.location.origin + window.location.pathname.split('/admin/')[0];
-                const res  = await fetch(`${base}/admin/pos/search?query=${encodeURIComponent(this.query)}&caja_id=${this.cajaId}`);
+                const res  = await fetch(`${this.baseUrl}admin/pos/search?query=${encodeURIComponent(this.query)}&caja_id=${this.cajaId}`);
                 const data = await res.json();
                 this.products = data.error ? [] : data;
                 
@@ -583,8 +583,7 @@ function pos() {
             this.errorMsg   = '';
             
             try {
-                const base = window.location.origin + window.location.pathname.split('/admin/')[0];
-                const res = await fetch(`${base}/admin/pos/store`, {
+                const res = await fetch(`${this.baseUrl}admin/pos/store`, {
                     method:  'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -645,8 +644,7 @@ function pos() {
 
         printTicket() {
             if (!this.successData) return;
-            const base = window.location.origin + window.location.pathname.split('/admin/')[0];
-            window.open(`${base}/admin/pos/ticket/${this.successData.id}`, '_blank', 'width=400,height=600');
+            window.open(`${this.baseUrl}admin/pos/ticket/${this.successData.id}`, '_blank', 'width=400,height=600');
         },
 
         handleKey(e) {
