@@ -73,19 +73,28 @@
                     <span class="text-[10px] font-black uppercase tracking-widest text-slate-500">Cajas Disponibles</span>
                 </div>
                 
-                @php $cajasAbiertas = \App\Models\Caja::where('abierta', 1)->with('sucursal')->get(); @endphp
+                @php $cajasDisponibles = \App\Models\Caja::with('sucursal')->get(); @endphp
                 <div class="max-h-80 overflow-y-auto py-2">
-                    @forelse($cajasAbiertas as $caja)
+                    @forelse($cajasDisponibles as $caja)
                         <button
-                            @click="selectCaja({{ $caja->id }}, '{{ addslashes($caja->nombre) }}', {{ $caja->locale_id }}); open = false"
-                            class="w-full text-left px-5 py-3 hover:bg-indigo-50 transition-colors flex flex-col gap-0.5 border-b border-slate-50 last:border-0"
+                            @click="selectCaja({{ $caja->id }}, '{{ addslashes($caja->nombre) }}', {{ $caja->locale_id }}, {{ $caja->abierta ? 'true' : 'false' }}, {{ $caja->apertura_automatica_pos ? 'true' : 'false' }}); open = false"
+                            class="w-full text-left px-5 py-3 hover:bg-indigo-50 transition-colors flex items-center justify-between gap-2 border-b border-slate-50 last:border-0"
                             :class="cajaId === {{ $caja->id }} ? 'bg-indigo-50 border-l-4 border-l-indigo-500' : ''"
                         >
-                            <span class="text-sm font-black text-slate-800 tracking-tight">{{ $caja->nombre }}</span>
-                            <span class="text-[10px] text-slate-400 font-bold uppercase">{{ $caja->sucursal?->nombre ?? 'Sin sucursal' }}</span>
+                            <div class="flex flex-col gap-0.5">
+                                <span class="text-sm font-black text-slate-800 tracking-tight">{{ $caja->nombre }}</span>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase">{{ $caja->sucursal?->nombre ?? 'Sin sucursal' }}</span>
+                            </div>
+
+                            {{-- Estado Visual --}}
+                            @if($caja->abierta)
+                                <span class="flex h-2 w-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" title="Caja Abierta"></span>
+                            @else
+                                <span class="flex h-2 w-2 rounded-full bg-slate-300 border border-slate-100" title="Caja Cerrada"></span>
+                            @endif
                         </button>
                     @empty
-                        <div class="px-5 py-8 text-center text-slate-400 italic text-sm">No hay cajas abiertas.</div>
+                        <div class="px-5 py-8 text-center text-slate-400 italic text-sm">No hay cajas configuradas.</div>
                     @endforelse
                 </div>
             </div>
@@ -211,9 +220,29 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                         </svg>
                     </div>
-                    <div>
-                        <h3 class="text-sm font-black uppercase tracking-wider text-slate-700">Mesa de Trabajo</h3>
-                        <p class="text-[10px] text-slate-400 font-bold" x-text="cart.length + ' producto(s) en carrito'"></p>
+                    <div class="flex items-center gap-2">
+                        <div>
+                            <h3 class="text-sm font-black uppercase tracking-wider text-slate-700">Mesa de Trabajo</h3>
+                            <p class="text-[10px] text-slate-400 font-bold" x-text="cart.length + ' producto(s) en carrito'"></p>
+                        </div>
+                        <button
+                            type="button"
+                            x-show="cajaId"
+                            @click.prevent="auditType = 'cierre'; auditMonto = 0; showAuditModal = true"
+                            class="flex items-center gap-2 px-3 py-2 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                        >
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
+                            Cerrar Caja
+                        </button>
+                        <button
+                            type="button"
+                            x-show="cajaId"
+                            @click.prevent="showGastoModal = true"
+                            class="flex items-center gap-2 px-3 py-2 bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                        >
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Gasto
+                        </button>
                     </div>
                 </div>
                 <button @click="cart = []" x-show="cart.length > 0"
@@ -459,12 +488,154 @@
                     IMPRIMIR TICKET
                 </button>
                 <button
+                    type="button"
                     @click="closeSuccess()"
                     class="w-full py-4 bg-white border-2 border-slate-100 rounded-[20px] text-sm font-black text-slate-500 hover:bg-slate-50 transition-all hover:text-slate-800"
                 >Nueva Venta</button>
             </div>
         </div>
     </div>
+
+    {{-- MODAL DE AUDITORÍA (APERTURA / CIERRE) --}}
+    <div x-show="showAuditModal" 
+         x-cloak
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm"
+    >
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100">
+            {{-- Header --}}
+            <div class="p-6 bg-slate-50 border-b border-slate-100 flex items-center gap-4">
+                <div :class="auditType === 'apertura' ? 'bg-indigo-500' : 'bg-rose-500'" 
+                     class="p-3 rounded-2xl shadow-lg shadow-indigo-500/20">
+                    <svg x-show="auditType === 'apertura'" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <svg x-show="auditType === 'cierre'" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 10h6m-6 4h6"/></svg>
+                </div>
+                <div>
+                    <h3 class="font-black text-slate-800 uppercase tracking-tight" x-text="auditType === 'apertura' ? 'Arqueo de Apertura' : 'Cerrar Jornada (Arqueo)'"></h3>
+                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest" x-text="auditType === 'apertura' ? 'Ingresa el efectivo inicial' : 'Ingresa el efectivo total contado'"></p>
+                </div>
+            </div>
+
+            {{-- Body --}}
+            <div class="p-8">
+                <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Efectivo Físico en Caja</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <span class="text-slate-400 font-black text-lg">{{ get_currency_symbol() }}</span>
+                    </div>
+                    <input 
+                        type="number" 
+                        step="0.01"
+                        x-model="auditMonto"
+                        class="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-2xl font-black text-slate-800 focus:border-indigo-500 focus:bg-white transition-all outline-none"
+                        placeholder="0.00"
+                        autofocus
+                    >
+                </div>
+                
+                <p x-show="auditType === 'apertura'" class="mt-4 text-[10px] text-slate-400 font-bold leading-relaxed px-2">
+                    * El sistema comparará este monto con el fondo asignado de 
+                    <span class="text-indigo-500">{{ format_currency(get_global_setting('default_opening_amount', 50)) }}</span>.
+                </p>
+                <p x-show="auditType === 'cierre'" class="mt-4 text-[10px] text-slate-400 font-bold leading-relaxed px-2">
+                    * Ingresa el total de dinero (billetes + monedas) que hay físicamente en la gaveta.
+                </p>
+            </div>
+
+            {{-- Footer --}}
+            <div class="p-6 bg-slate-50 flex items-center gap-3">
+                <button @click="showAuditModal = false" 
+                        class="flex-1 px-4 py-3 text-slate-500 font-black text-xs uppercase tracking-widest hover:text-slate-800 transition-colors">
+                    Cancelar
+                </button>
+                <button @click="submitAudit()" 
+                        :disabled="isAuditLoading"
+                        :class="auditType === 'apertura' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-rose-600 hover:bg-rose-700'"
+                        class="flex-[2] py-4 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2">
+                    <svg x-show="isAuditLoading" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                    <span x-text="isAuditLoading ? 'PROCESANDO...' : (auditType === 'apertura' ? 'INICIAR JORNADA' : 'CERRAR Y AUDITAR')"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ══════════════════════════════════════ --}}
+    {{-- MODAL DE GASTO                         --}}
+    {{-- ══════════════════════════════════════ --}}
+    <div 
+        x-show="showGastoModal" 
+        x-cloak
+        class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+    >
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden ring-1 ring-slate-200"
+             x-transition:enter="transition transform duration-300"
+             x-transition:enter-start="scale-95 -translate-y-4"
+             x-transition:enter-end="scale-100 translate-y-0"
+        >
+            <div class="px-8 py-6 bg-gradient-to-br from-amber-500 to-amber-600 text-white relative">
+                <h3 class="text-xl font-black uppercase tracking-tight">Registrar Gasto</h3>
+                <p class="text-sm text-amber-100 font-medium">Extraer dinero de la caja activa</p>
+                <button type="button" @click="showGastoModal = false" class="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            
+            <div class="p-8 space-y-6">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-500">Monto del Gasto</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black">{{ get_currency_symbol() }}</span>
+                        <input 
+                            type="number"
+                            id="gasto-monto-input"
+                            x-model="gastoMonto"
+                            class="w-full pl-10 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-amber-500 focus:ring-0 transition-all font-black text-2xl"
+                            placeholder="0.00"
+                            min="0.01"
+                            step="0.01"
+                        >
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-500">Descripción / Motivo</label>
+                    <textarea 
+                        x-model="gastoDescripcion"
+                        class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-amber-500 focus:ring-0 transition-all font-medium text-slate-700 min-h-[100px] resize-none"
+                        placeholder="Ej: Compra de artículos de limpieza..."
+                    ></textarea>
+                </div>
+
+                <div x-show="errorMsg" class="px-4 py-3 bg-rose-50 border border-rose-100 rounded-2xl text-xs font-bold text-rose-700" x-text="errorMsg"></div>
+
+                <div class="flex gap-3 pt-2">
+                    <button 
+                        type="button"
+                        @click="showGastoModal = false; gastoMonto = 0; gastoDescripcion = ''"
+                        class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-200 transition-all"
+                    >
+                        Cancelar
+                    </button>
+                    <button 
+                        type="button"
+                        @click="submitGasto()"
+                        class="flex-[2] py-4 bg-amber-500 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-amber-600 shadow-lg shadow-amber-500/30 transition-all"
+                    >
+                        Registrar Gasto
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -483,6 +654,18 @@ function pos() {
         processing:  false,
         errorMsg:    '',
         successData: null,
+        
+        // Audit System
+        showAuditModal: false,
+        auditType: '',
+        auditMonto: 0,
+        auditObservacion: '',
+
+        // GASTO MODAL
+        showGastoModal: false,
+        gastoMonto: 0,
+        gastoDescripcion: '',
+        isAuditLoading: false,
 
         total() {
             return this.cart.reduce((s, i) => s + i.precio * i.qty, 0);
@@ -516,24 +699,73 @@ function pos() {
             });
         },
 
-        selectCaja(id, nombre, localeId) {
-            this.cajaId      = id;
-            this.cajaNombre  = nombre;
+        selectCaja(id, nombre, localeId, abierta = true, autoOpen = false) {
+            this.cajaId       = id;
+            this.cajaNombre   = nombre;
             this.cajaLocaleId = localeId;
-            this.cart        = [];
-            this.query       = '';
-            this.products    = [];
-            this.errorMsg    = '';
-            this.recibido    = '';
+            this.cart         = [];
+            this.query        = '';
+            this.products     = [];
+            this.errorMsg     = '';
+            this.recibido     = '';
+
+            if (!abierta) {
+                if (autoOpen) {
+                    // Apertura automática sin arqueo
+                    this.autoAbrirCaja();
+                } else {
+                    // Requiere arqueo manual
+                    this.auditType  = 'apertura';
+                    this.auditMonto = {{ get_global_setting('default_opening_amount', 50) }};
+                    this.showAuditModal = true;
+                }
+            }
+
             this.init();
+        },
+
+        async autoAbrirCaja() {
+            const montoDefault = {{ get_global_setting('default_opening_amount', 50) }};
+            try {
+                const fd = new FormData();
+                fd.append('monto_apertura', montoDefault);
+                fd.append('monto_esperado', montoDefault);
+
+                const res = await fetch(`${this.baseUrl}cajas/${this.cajaId}/abrir`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: fd
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (res.ok && data.success) {
+                    this.search(); // Habilitar búsqueda de productos
+                } else {
+                    this.flashError(data.error || 'No se pudo abrir la caja automáticamente.');
+                }
+            } catch (e) {
+                this.flashError('Error al intentar abrir la caja automáticamente.');
+            }
         },
 
         async search() {
             if (!this.cajaId) return;
             this.loading     = true;
             try {
-                const res  = await fetch(`${this.baseUrl}admin/pos/search?query=${encodeURIComponent(this.query)}&caja_id=${this.cajaId}`);
+                const res  = await fetch(`${this.baseUrl}pos/search?query=${encodeURIComponent(this.query)}&caja_id=${this.cajaId}`);
                 const data = await res.json();
+                
+                if (res.status === 422 && data.error && (data.error.includes('cerrada') || data.error.includes('abierta'))) {
+                    this.auditType = 'apertura';
+                    this.auditMonto = {{ get_global_setting('default_opening_amount', 50) }};
+                    this.showAuditModal = true;
+                    return;
+                }
+
                 this.products = data.error ? [] : data;
                 
                 if (this.products.length === 1 && this.query.trim().length > 3) {
@@ -583,7 +815,7 @@ function pos() {
             this.errorMsg   = '';
             
             try {
-                const res = await fetch(`${this.baseUrl}admin/pos/store`, {
+                const res = await fetch(`${this.baseUrl}pos/store`, {
                     method:  'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -620,6 +852,46 @@ function pos() {
             }
         },
 
+        async submitGasto() {
+            if (!this.cajaId) return;
+            if (this.gastoMonto <= 0) {
+                this.errorMsg = 'El monto del gasto debe ser mayor a 0.';
+                return;
+            }
+
+            try {
+                const url = `${this.baseUrl}cajas/${this.cajaId}/egreso`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        monto: this.gastoMonto,
+                        descripcion_libre: this.gastoDescripcion
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    this.showGastoModal = false;
+                    this.gastoMonto = 0;
+                    this.gastoDescripcion = '';
+                    // Notificación local si existe
+                    alert('Gasto registrado con éxito.');
+                } else {
+                    this.errorMsg = data.error || 'Error al registrar el gasto.';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                this.errorMsg = 'Error de conexión al registrar el gasto.';
+            }
+        },
+
         closeSuccess() {
             this.successData = null;
             this.recibido    = '';
@@ -644,16 +916,64 @@ function pos() {
 
         printTicket() {
             if (!this.successData) return;
-            window.open(`${this.baseUrl}admin/pos/ticket/${this.successData.id}`, '_blank', 'width=400,height=600');
+            window.open(`${this.baseUrl}pos/ticket/${this.successData.id}`, '_blank', 'width=400,height=600');
         },
 
         handleKey(e) {
             if (e.key === 'F5') { e.preventDefault(); this.processSale(); }
             if (e.key === 'Escape') {
                 if (this.successData) { this.closeSuccess(); }
+                else if (this.showAuditModal) { this.showAuditModal = false; }
                 else { this.query = ''; this.products = []; }
             }
         },
+
+        async submitAudit() {
+            if (this.isAuditLoading) return;
+            this.isAuditLoading = true;
+
+            const url = this.auditType === 'apertura'
+                ? `${this.baseUrl}cajas/${this.cajaId}/abrir`
+                : `${this.baseUrl}cajas/${this.cajaId}/cerrar`;
+
+            const field = this.auditType === 'apertura' ? 'monto_apertura' : 'monto_real';
+
+            try {
+                const fd = new FormData();
+                fd.append(field, this.auditMonto);
+                if (this.auditType === 'apertura') {
+                    fd.append('monto_esperado', {{ get_global_setting('default_opening_amount', 50) }});
+                }
+
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: fd
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (res.ok && data.success) {
+                    this.showAuditModal = false;
+                    this.auditMonto = 0;
+                    if (this.auditType === 'apertura') {
+                        this.search(); // Habilitar búsqueda de productos
+                    } else {
+                        location.reload(); // Resetear estado tras cierre
+                    }
+                } else {
+                    const errMsg = data.error || data.message || 'Error al procesar la operación de caja.';
+                    this.flashError(errMsg);
+                }
+            } catch (e) {
+                this.flashError('Error de conexión al procesar la auditoría.');
+            } finally {
+                this.isAuditLoading = false;
+            }
+        }
     };
 }
 </script>

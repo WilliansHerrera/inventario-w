@@ -23,6 +23,7 @@ use MoonShine\Laravel\Resources\MoonShineUserRoleResource;
 use App\MoonShine\Resources\Venta\VentaResource;
 use App\MoonShine\Resources\VentaDetalle\VentaDetalleResource;
 use App\MoonShine\Resources\GlobalSetting\GlobalSettingResource;
+use App\MoonShine\Resources\CajaTurnoResource;
 use App\MoonShine\Pages\SystemUpdatePage;
 use App\MoonShine\Pages\POS;
 use App\MoonShine\Pages\BackupPage;
@@ -96,6 +97,7 @@ final class MoonShineLayout extends AppLayout
                 MenuItem::make(CajaResource::class, 'Control de Cajas')->icon('rectangle-group'),
                 MenuItem::make(VentaResource::class, 'Registros de Ventas')->icon('shopping-cart'),
                 MenuItem::make(VentaDetalleResource::class, 'Historial Detallado')->icon('list-bullet'),
+                MenuItem::make(CajaTurnoResource::class, 'Auditoría de Turnos')->icon('calculator'),
             ])->icon('banknotes'),
 
             MenuGroup::make('Inventario', [

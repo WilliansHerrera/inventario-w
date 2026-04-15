@@ -172,6 +172,20 @@ class GlobalSettingFormPage extends FormPage
             \MoonShine\UI\Fields\Textarea::make('Pie de Página', 'receipt_footer')
                 ->default('¡Gracias por su compra!')
                 ->hint('Texto al final del ticket'),
+
+            \MoonShine\UI\Components\Layout\Divider::make('Seguridad y Auditoría'),
+
+            Switcher::make('Bloquear POS sin Turno Abierto', 'pos_block_without_shift')
+                ->default(false)
+                ->hint('Si se activa, el terminal POS no permitirá realizar ventas ni búsquedas si no hay una jornada de caja iniciada.'),
+
+            \MoonShine\UI\Fields\Number::make('Monto de Apertura Global ($)', 'default_opening_amount')
+                ->default(50)
+                ->hint('Es el dinero que se asignará automáticamente a todas las cajas al usar el botón "Iniciar Jornada Única".'),
+
+            Switcher::make('Apertura Automática de Caja', 'auto_open_shifts')
+                ->default(false)
+                ->hint('Si se activa, el turno de caja se abrirá automáticamente al entrar al terminal POS usando el monto de apertura global.'),
         ];
     }
 }

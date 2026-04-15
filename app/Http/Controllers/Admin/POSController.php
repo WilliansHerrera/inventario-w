@@ -29,12 +29,19 @@ class POSController extends Controller
         $query  = trim($request->get('query', ''));
 
         if (! $cajaId) {
-            return response()->json(['error' => 'Selecciona una caja primero.'], 422);
+            return response()->json(['error' => 'No se ha seleccionado una caja.'], 422);
         }
 
         $caja = Caja::find($cajaId);
-        if (! $caja || ! $caja->abierta) {
-            return response()->json(['error' => 'La caja seleccionada no está abierta.'], 422);
+
+        if (! $caja) {
+            return response()->json(['error' => 'Caja no encontrada.'], 422);
+        }
+
+        // Validación de bloqueo por configuración global o estado de caja
+        // Siempre requerimos apertura manual si está cerrada y queremos auditoría
+        if (! $caja->abierta) {
+            return response()->json(['error' => 'La caja está cerrada. Debes iniciar la jornada con el arqueo de apertura.'], 422);
         }
 
         $results = Inventario::with('producto')
@@ -79,9 +86,14 @@ class POSController extends Controller
         ]);
 
         $caja = Caja::findOrFail($request->caja_id);
+        
+        // --- APERTURA AUTOMÁTICA (Si está activa) ---
+        $this->cashService->ensureOpenShift($caja);
 
-        if (! $caja->abierta) {
-            return response()->json(['error' => 'La caja no está abierta.'], 422);
+        // Validación de bloqueo por configuración global
+        $blockWithoutShift = get_global_setting('pos_block_without_shift', false);
+        if ($blockWithoutShift && ! $caja->abierta) {
+            return response()->json(['error' => 'No puedes procesar ventas sin una jornada abierta.'], 422);
         }
 
         try {

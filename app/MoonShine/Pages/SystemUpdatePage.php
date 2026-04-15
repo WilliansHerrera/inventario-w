@@ -17,7 +17,9 @@ use App\Services\GitHubUpdateService;
 use App\Models\PosVersion;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use MoonShine\UI\Fields\Text;
+use MoonShine\UI\Fields\Password;
 use MoonShine\UI\Components\Badge;
 
 class SystemUpdatePage extends Page
@@ -35,21 +37,45 @@ class SystemUpdatePage extends Page
         $commits = Cache::remember('web_latest_commits', 3600, fn() => $service->getWebLatestCommits());
         $posVersions = PosVersion::orderBy('release_date', 'desc')->get();
         
-        // Obtener versión actual local (git hash)
+        // Obtener versión actual local (git hash) de forma segura
         $currentCommit = "Desconocido";
+        $hasLocalChanges = false;
+        
         try {
-            $currentCommit = trim(shell_exec('git rev-parse --short HEAD') ?? 'No Git detected');
-        } catch(\Exception $e) {}
+            // Determinar ejecutable de Git (soporte para portable en subfolder o sistema)
+            $gitPath = base_path('..\server\git\cmd\git.exe');
+            $git = file_exists($gitPath) ? $gitPath : 'git';
+
+            $commitProcess = Process::run("$git rev-parse --short HEAD");
+            if ($commitProcess->successful()) {
+                $currentCommit = trim($commitProcess->output());
+            }
+
+            $statusProcess = Process::run("$git status --porcelain");
+            if ($statusProcess->successful()) {
+                $hasLocalChanges = !empty(trim($statusProcess->output()));
+            }
+        } catch (\Exception $e) {
+            // Ignorar errores de git para no romper la página
+            Log::warning("Git check failed: " . $e->getMessage());
+        }
 
         return [
             Grid::make([
                 // SECCIÓN WEB
                 Column::make([
                     Box::make('Sistema Web (Laravel)', [
-                        Heading::make('Versión Actual: ' . $currentCommit)->h(4),
+                        Flex::make([
+                            Heading::make('Versión Actual: ' . $currentCommit)->h(4),
+                            $hasLocalChanges 
+                                ? Badge::make('Cambios Locales Detectados', 'warning')
+                                : Badge::make('Repositorio Limpio', 'success'),
+                        ])->justifyAlign('between'),
+                        
                         LineBreak::make(),
                         
                         Heading::make('Últimos cambios en GitHub:')->h(5),
+
                         TableBuilder::make()
                             ->items($commits)
                             ->fields([
@@ -69,16 +95,35 @@ class SystemUpdatePage extends Page
                                 ->icon('cloud-arrow-down')
                                 ->withConfirm('Confirmar Actualización', '¿Estás seguro? El sistema se actualizará desde GitHub y correrá las migraciones.', 'Actualizar Ahora'),
                         ])->justifyAlign('start'),
+
+                        LineBreak::make(),
+                        Heading::make('Herramientas de Limpieza')->h(5),
+                        ActionButton::make('Empezar de Cero (Reset)', fn() => route('admin.system.factory-reset'))
+                            ->error()
+                            ->icon('trash')
+                            ->withConfirm(
+                                'BORRADO TOTAL', 
+                                'Esta acción eliminará todos los datos. El sistema se reiniciará con el usuario admin/admin. ¿Confirmar?', 
+                                'Resetear Sistema',
+                                fn() => [
+                                    Password::make('Confirmar con Contraseña de Admin', 'password')
+                                        ->required()
+                                ]
+                            ),
                     ])
                 ])->columnSpan(6),
 
                 // SECCIÓN POS
                 Column::make([
                     Box::make('Terminales de Windows (POS)', [
-                        Heading::make('Control de Versiones de Ejecutables')->h(4),
+                        Heading::make('Control de Versiones y Descarga')->h(4),
                         LineBreak::make(),
                         
-                        \MoonShine\UI\Components\FlexibleRender::make('Gestiona las versiones que las terminales descargarán automáticamente.'),
+                        Flex::make([
+                            ActionButton::make('Descargar Instalador POS', fn() => route('admin.pos.download'))
+                                ->primary()
+                                ->icon('cloud-arrow-down'),
+                        ]),
                         
                         LineBreak::make(),
                         TableBuilder::make()

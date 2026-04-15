@@ -22,6 +22,9 @@ class GlobalSetting extends Model
         'win_default_ruta_datos',
         'receipt_header',
         'receipt_footer',
+        'pos_block_without_shift',
+        'default_opening_amount',
+        'auto_open_shifts',
     ];
 
     protected static function booted()

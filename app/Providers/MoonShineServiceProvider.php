@@ -17,6 +17,7 @@ use App\MoonShine\Resources\Caja\CajaResource;
 use App\MoonShine\Resources\Venta\VentaResource;
 use App\MoonShine\Resources\VentaDetalle\VentaDetalleResource;
 use App\MoonShine\Resources\GlobalSetting\GlobalSettingResource;
+use App\MoonShine\Resources\CajaTurnoResource;
 
 class MoonShineServiceProvider extends ServiceProvider
 {
@@ -36,6 +37,7 @@ class MoonShineServiceProvider extends ServiceProvider
                 VentaResource::class,
                 VentaDetalleResource::class,
                 GlobalSettingResource::class,
+                CajaTurnoResource::class,
             ])
             ->pages([
                 ...$core->getConfig()->getPages(),

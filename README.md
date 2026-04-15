@@ -1,4 +1,5 @@
 # 🚀 Inventario-w | Industrial POS & Inventory System
+## Version 1.9.0-Beta (Latest Stable)
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="300" alt="Laravel Logo">
@@ -10,6 +11,8 @@
 ## 🌟 Overview
 **Inventario-w** is a high-performance, industrial-grade Point of Sale (POS) and Inventory Management system. Built on **Laravel 12** and **MoonShine 4**, it offers a complete ecosystem for modern businesses, combining a robust web administrative panel with lightweight native Windows terminals.
 
+The system is optimized for **offline-first** operations and **high-speed auditing**, ensuring that business owners have full control over their cash flow and stock at all times.
+
 ---
 
 ## 🛠️ Tech Stack
@@ -18,26 +21,33 @@
 - **Desktop Engine:** [Tauri 2.0](https://tauri.app) (Rust + JavaScript)
 - **Mobile Support:** Android App (Kotlin + Jetpack Compose)
 - **Database:** MySQL (Cloud) + SQLite (Local Edge Sync)
+- **UI Architecture:** Alpine.js + TailwindCSS (Premium Aesthetic)
 
 ---
 
-## ✨ Key Features
+## ✨ Key Features (v1.9.0-Beta)
 
-### 🛒 Industrial POS (Web & Win)
-- **High-Speed Search:** Instant product lookup by Name, SKU, or Barcode.
-- **Offline-First (Win):** Native Windows terminal works without internet, syncing automatically.
-- **Smart Numpad:** Optimized for rapid, keyboard-only operation in physical stores.
-- **Thermal Printing:** Professional receipts with customizable branding.
+### 🏦 Advanced Cash Auditing (New)
+- **Shift Management (Turnos):** Comprehensive control over opening and closing jornadas.
+- **Physical Count (Arqueos):** Track differences between expected balance and real cash in drawer.
+- **Expense Tracking (Egresos):** Register expenses and withdrawals (Proveedores, Servicios, etc.) directly from the POS or Admin panel.
+- **Global Store Start:** One-click "Iniciar Jornada Única" to open all cash registers simultaneously.
 
-### 📦 Inventory Control
+### 🛒 Premium Industrial POS
+- **High-Speed Search:** Instant product lookup by Name, SKU, or Barcode (optimized for scanners).
+- **Auto-Open Shifts:** Smart logic that automatically initializes a shift upon the first sale if the register is closed.
+- **Thermal Printing:** Professional receipts with customizable branding and dynamic numbering.
+- **Offline-First (Win):** Native Windows terminal works without internet, syncing automatically when connectivity returns.
+
+### 📦 Inventory & Logistics
 - **Multi-Locale Management:** Independent stock levels for branches, warehouses, or delivery trucks.
-- **Low-Stock Alerts:** Real-time monitoring and visual indicators.
+- **Real-Time Adjustments:** Automatic stock discounts and movement logs for every sale or adjustment.
+- **Low-Stock Alerts:** Visual indicators and monitoring for fast-moving items.
 
-### ⚙️ Automation & Updates (New)
+### ⚙️ Automation & Updates
 - **GitHub Update Center:** Direct integration with GitHub API to monitor commits and releases.
-- **One-Click Web Update:** Execute `git pull` and database migrations directly from the admin panel.
-- **POS Release Sync:** Automatically fetch and manage `.exe` installers from GitHub Releases.
-- **Dynamic Themes:** UI customization with real-time palette switching (Green, Cyan, Purple, etc.) from global settings.
+- **One-Click Web Update:** Execute updates and database migrations directly from the admin interface.
+- **Factory Reset Protection:** Secure data cleanup feature with password verification for "Fresh Start" scenarios.
 
 ---
 
@@ -63,9 +73,11 @@
    php artisan key:generate
    ```
 
-4. **Migrations & Seeders:**
+4. **Database Stabilization:**
    ```bash
+   # Create database first, then run migrations and audit seeders
    php artisan migrate --seed
+   php artisan db:seed --class=CashAuditSeeder
    ```
 
 5. **Run the server:**
@@ -74,9 +86,9 @@
    ```
 
 ### 🖥️ Windows Terminal Build
-The installer is generated via **GitHub Actions**. To build locally:
+The installer is generated via **GitHub Actions** or **Local Scripts**:
 1. Go to `POS-Windows` folder.
-2. Run `.\build.ps1`.
+2. Run `.\prepare_installer.ps1` to bundle assets and generate the `.exe`.
 
 ---
 

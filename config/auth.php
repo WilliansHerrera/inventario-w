@@ -40,6 +40,11 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        'moonshine' => [
+            'driver' => 'session',
+            'provider' => 'moonshine_users',
+        ],
     ],
 
     /*
@@ -63,6 +68,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\User::class),
+        ],
+
+        'moonshine_users' => [
+            'driver' => 'eloquent',
+            'model' => \MoonShine\Laravel\Models\MoonshineUser::class,
         ],
 
         // 'users' => [

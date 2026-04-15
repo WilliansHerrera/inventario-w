@@ -30,6 +30,10 @@ class CajaFormPage extends FormPage
                 ->default(0)
                 ->hint(get_currency_symbol() . ' ' . get_global_setting('currency_code')),
             Switcher::make('Abierta', 'abierta')->default(false),
+            Switcher::make('Inc. Apertura Global', 'incluir_en_apertura_global')->default(true)
+                ->hint('Incluir en la apertura masiva de inicio de jornada.'),
+            Switcher::make('Apertura Automática POS', 'apertura_automatica_pos')->default(false)
+                ->hint('Si está activo, el POS abrirá la caja automáticamente sin pedir arqueo manual.'),
         ];
     }
 }
