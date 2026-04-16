@@ -12,7 +12,10 @@ class CashRegisterService
     /**
      * Open a cash register shift (Turno).
      */
-    public function openShift(\App\Models\Caja $caja, float $initialBalanceReal, ?float $expectedBalance = null, ?int $userId = null): void
+    /**
+     * Open a cash register shift (Turno).
+     */
+    public function openShift(\App\Models\Caja $caja, float $initialBalanceReal, ?float $expectedBalance = null, ?int $userId = null, ?array $denominaciones = null): void
     {
         $userId = $userId ?? auth('moonshine')->id() ?? \Illuminate\Support\Facades\Auth::id() ?? 1;
         $expectedBalance = $expectedBalance ?? $initialBalanceReal; // Si no se provee, se asume que es igual
@@ -25,6 +28,7 @@ class CashRegisterService
             'monto_apertura_esperado' => $expectedBalance,
             'monto_apertura_real' => $initialBalanceReal,
             'diferencia_apertura' => $diferencia,
+            'denominaciones_apertura' => $denominaciones,
             'abierto_at' => now(),
             'estado' => 'abierto',
         ]);
@@ -51,7 +55,7 @@ class CashRegisterService
     /**
      * Close a cash register shift (Turno) with physical count (arqueo).
      */
-    public function closeShift(\App\Models\Caja $caja, float $montoReal, ?int $userId = null): void
+    public function closeShift(\App\Models\Caja $caja, float $montoReal, ?int $userId = null, ?array $denominaciones = null): void
     {
         $turno = $caja->turnoActivo;
         if (!$turno) {
@@ -67,6 +71,7 @@ class CashRegisterService
             'monto_cierre_esperado' => $montoEsperado,
             'monto_cierre_real' => $montoReal,
             'diferencia' => $diferencia,
+            'denominaciones_cierre' => $denominaciones,
             'cerrado_at' => now(),
             'estado' => 'cerrado',
         ]);
@@ -109,10 +114,15 @@ class CashRegisterService
 
     /**
      * Ensures a shift is open if auto_open_shifts is enabled.
+     * FIX: Respects both Global and Caja settings.
      */
     public function ensureOpenShift(\App\Models\Caja $caja): void
     {
-        if (!$caja->abierta && get_global_setting('auto_open_shifts', false)) {
+        // Solo abrir si AMBOS están de acuerdo en apertura automática, o si el global es el único disponible
+        $globalAutoOpen = (bool) get_global_setting('auto_open_shifts', false);
+        $cajaAutoOpen = (bool) $caja->apertura_automatica_pos;
+
+        if (!$caja->abierta && $globalAutoOpen && $cajaAutoOpen) {
             $montoInicio = (float) get_global_setting('default_opening_amount', 50.0);
             $this->openShift($caja, $montoInicio, $montoInicio);
         }

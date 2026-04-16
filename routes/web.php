@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\POSController;
 
+// Alias para evitar el error 'Route [login] not defined'
+Route::get('/login-alias', fn() => redirect('/login'))->name('login');
+
 Route::get('/pos-download', function() {
     $path = public_path('downloads/POS-Scanner-Setup.exe');
     if (file_exists($path)) {
@@ -153,5 +156,6 @@ Route::prefix('cajas')
         Route::match(['get', 'post'], '/{caja}/abrir', [\App\Http\Controllers\Admin\CajaActionController::class, 'abrirTurno'])->name('admin.caja.abrir');
         Route::match(['get', 'post'], '/{caja}/cerrar', [\App\Http\Controllers\Admin\CajaActionController::class, 'cerrarTurno'])->name('admin.caja.cerrar');
         Route::match(['get', 'post'], '/{caja}/egreso', [\App\Http\Controllers\Admin\CajaActionController::class, 'registrarEgreso'])->name('admin.caja.egreso');
+        Route::get('/{caja}/summary', [\App\Http\Controllers\Admin\CajaActionController::class, 'getSummary'])->name('admin.caja.summary');
         Route::match(['get', 'post'], '/iniciar-dia', [\App\Http\Controllers\Admin\CajaActionController::class, 'iniciarDiaCompleto'])->name('admin.caja.iniciar-dia');
     });

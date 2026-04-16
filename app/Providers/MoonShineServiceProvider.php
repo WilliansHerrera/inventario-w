@@ -17,7 +17,7 @@ use App\MoonShine\Resources\Caja\CajaResource;
 use App\MoonShine\Resources\Venta\VentaResource;
 use App\MoonShine\Resources\VentaDetalle\VentaDetalleResource;
 use App\MoonShine\Resources\GlobalSetting\GlobalSettingResource;
-use App\MoonShine\Resources\CajaTurnoResource;
+use App\MoonShine\Resources\CajaTurno\CajaTurnoResource;
 
 class MoonShineServiceProvider extends ServiceProvider
 {

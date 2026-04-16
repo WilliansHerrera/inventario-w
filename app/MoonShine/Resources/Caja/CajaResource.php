@@ -94,7 +94,38 @@ class CajaResource extends ModelResource
                 ->icon('stop')
                 ->withConfirm(
                     'Cerrar Jornada',
-                    'Ingresa el efectivo total contado físicamente en la caja (incluyendo el fondo inicial). El sistema auditará si hay descuadres.',
+                    function(Caja $item) {
+                        $summary = $item->getShiftSummary();
+                        $ventas = format_currency($summary['ventas']);
+                        $egresos = format_currency($summary['egresos']);
+                        $fondo = format_currency($summary['apertura']);
+                        $esperado = format_currency($summary['esperado']);
+                        
+                        return "
+                            <div class='mb-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm'>
+                                <h4 class='text-xs font-bold uppercase tracking-wider text-slate-500 mb-3'>Estado de Caja Actual</h4>
+                                <div class='space-y-2 text-sm'>
+                                    <div class='flex justify-between items-center'>
+                                        <span class='text-slate-600 dark:text-slate-400'>Ventas Registradas:</span>
+                                        <span class='font-bold text-emerald-600'>+ $ventas</span>
+                                    </div>
+                                    <div class='flex justify-between items-center'>
+                                        <span class='text-slate-600 dark:text-slate-400'>Egresos/Gastos:</span>
+                                        <span class='font-bold text-rose-600'>- $egresos</span>
+                                    </div>
+                                    <div class='flex justify-between items-center'>
+                                        <span class='text-slate-600 dark:text-slate-400'>Fondo de Apertura:</span>
+                                        <span class='font-medium text-slate-700 dark:text-slate-300'>$fondo</span>
+                                    </div>
+                                    <div class='pt-2 mt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center'>
+                                        <span class='font-bold text-slate-800 dark:text-slate-100 uppercase text-xs'>Total Esperado en Caja:</span>
+                                        <span class='text-lg font-black text-primary'>$esperado</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class='text-sm text-slate-500 mb-2'>Por favor, cuenta el efectivo físico y escribe el monto total abajo:</p>
+                        ";
+                    },
                     'Cerrar y Auditar',
                     fn() => [
                         \MoonShine\UI\Fields\Number::make('Efectivo Físico Contado', 'monto_real')

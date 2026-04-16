@@ -38,8 +38,10 @@ class POSController extends Controller
             return response()->json(['error' => 'Caja no encontrada.'], 422);
         }
 
+        // --- APERTURA AUTOMÁTICA (Si está activa) ---
+        $this->cashService->ensureOpenShift($caja);
+
         // Validación de bloqueo por configuración global o estado de caja
-        // Siempre requerimos apertura manual si está cerrada y queremos auditoría
         if (! $caja->abierta) {
             return response()->json(['error' => 'La caja está cerrada. Debes iniciar la jornada con el arqueo de apertura.'], 422);
         }

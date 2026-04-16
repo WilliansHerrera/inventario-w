@@ -17,6 +17,8 @@
     @keydown.window="handleKey($event)"
     class="flex flex-col w-full bg-slate-50 text-slate-800 min-h-screen lg:min-h-0 lg:h-[calc(100vh-4rem)] overflow-y-auto lg:overflow-hidden font-[Inter,sans-serif]"
 >
+    {{-- Audio para feedback Premium --}}
+    <audio x-ref="scanSound" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTtvT19vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb08="></audio>
     {{-- ══════════════════════════════════════ --}}
     {{-- HEADER (Premium styled)                --}}
     {{-- ══════════════════════════════════════ --}}
@@ -228,7 +230,7 @@
                         <button
                             type="button"
                             x-show="cajaId"
-                            @click.prevent="auditType = 'cierre'; auditMonto = 0; showAuditModal = true"
+                            @click.prevent="openAuditModal('cierre')"
                             class="flex items-center gap-2 px-3 py-2 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                         >
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -382,20 +384,25 @@
 
                         <div class="w-px h-8 bg-slate-200 shrink-0"></div>
 
-                        {{-- Vuelto: ancho fijo --}}
-                        <div class="flex flex-col gap-0 shrink-0 w-24">
-                            <p class="text-[8px] font-black uppercase tracking-widest leading-none"
-                               :class="vueltoNegativo() ? 'text-rose-400' : 'text-emerald-500'">Vuelto</p>
-                            <span
-                                class="text-xl font-black tabular-nums leading-tight transition-all"
-                                :class="vuelto() !== null ? 'text-emerald-500' : (vueltoNegativo() ? 'text-rose-500' : 'text-slate-300')"
-                                x-text="vuelto() !== null ? fmt(vuelto()) : '—'"
-                            ></span>
                             {{-- Falta --}}
                             <span x-show="vueltoNegativo()"
                                 class="text-[9px] font-black text-rose-400 leading-none"
                                 x-text="'Falta ' + fmt(total() - (parseFloat(recibido)||0))"
                             ></span>
+                        </div>
+
+                        {{-- Desglose del Vuelto Assistant --}}
+                        <div x-show="vuelto() > 0" class="flex flex-col gap-1 ml-2 max-w-[150px]">
+                            <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">Entregar:</p>
+                            <div class="flex flex-wrap gap-1">
+                                <template x-for="item in getVueltoBreakdown(vuelto())" :key="item.label">
+                                    <span :class="item.isCoin ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-indigo-50 text-indigo-600 border-indigo-100'"
+                                          class="text-[8px] font-black px-1.5 py-0.5 rounded border flex gap-1 items-center">
+                                          <span x-text="item.count + 'x'"></span>
+                                          <span x-text="item.label"></span>
+                                    </span>
+                                </template>
+                            </div>
                         </div>
 
                     </div>
@@ -440,57 +447,75 @@
          x-transition:enter="transition cubic-bezier(0.16, 1, 0.3, 1) duration-300"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100">
-        <div class="bg-white rounded-[40px] shadow-2xl w-full max-w-sm p-10 text-center space-y-8 relative overflow-hidden" 
+        <div class="bg-white rounded-[40px] shadow-2xl w-full max-w-sm p-5 text-center space-y-4 relative flex flex-col max-h-[95vh] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200" 
              @click.stop
              x-transition:enter="transition transform duration-500"
              x-transition:enter-start="scale-50 translate-y-20 rotate-6"
              x-transition:enter-end="scale-100 translate-y-0 rotate-0">
-            
-            <div class="w-24 h-24 bg-emerald-500 rounded-[30px] flex items-center justify-center mx-auto shadow-2xl shadow-emerald-500/40 rotate-12 transition-transform hover:rotate-0 duration-500">
-                <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+             
+            <div class="w-16 h-16 bg-emerald-500 rounded-[24px] flex items-center justify-center mx-auto shadow-xl shadow-emerald-500/30 rotate-12 shrink-0">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"/>
                 </svg>
             </div>
             
-            <div class="space-y-2">
-                <h2 class="text-3xl font-black text-slate-900 tracking-tighter">¡Venta Realizada!</h2>
-                <div class="inline-flex px-4 py-1.5 bg-indigo-50 text-indigo-700 rounded-full text-xs font-black uppercase tracking-widest">
+            <div class="space-y-1">
+                <h2 class="text-xl font-black text-slate-900 tracking-tighter">¡Venta Realizada!</h2>
+                <div class="inline-flex px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-[9px] font-black uppercase tracking-widest">
                     Ticket #<span x-text="String(successData?.id ?? 0).padStart(6, '0')"></span>
                 </div>
             </div>
 
-            <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-3">
+            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
                 <div>
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Cobrado</p>
-                    <p class="text-5xl font-black text-slate-900 tabular-nums" x-text="fmt(successData?.total ?? 0)"></p>
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Cobrado</p>
+                    <p class="text-3xl font-black text-slate-900 tabular-nums" x-text="fmt(successData?.total ?? 0)"></p>
                 </div>
                 {{-- Vuelto en el modal (solo si aplica) --}}
                 <template x-if="successData?.vuelto !== null && successData?.vuelto !== undefined && successData?.recibido > 0">
-                    <div class="flex items-center justify-between pt-3 border-t border-slate-200">
-                        <div class="text-left">
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Recibido</p>
-                            <p class="text-lg font-black text-slate-600 tabular-nums" x-text="fmt(successData?.recibido ?? 0)"></p>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between pt-2 border-t border-slate-200">
+                            <div class="text-left">
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Recibido</p>
+                                <p class="text-base font-black text-slate-600 tabular-nums" x-text="fmt(successData?.recibido ?? 0)"></p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Vuelto</p>
+                                <p class="text-xl font-black text-emerald-500 tabular-nums" x-text="fmt(successData?.vuelto ?? 0)"></p>
+                            </div>
                         </div>
-                        <div class="text-right">
-                            <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Vuelto</p>
-                            <p class="text-3xl font-black text-emerald-500 tabular-nums" x-text="fmt(successData?.vuelto ?? 0)"></p>
+                        
+                        {{-- Desglose en Éxito --}}
+                        <div class="pt-2 border-t border-slate-100">
+                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2 text-left">Desglose de cambio:</p>
+                            <div class="grid grid-cols-2 gap-1.5">
+                                <template x-for="item in getVueltoBreakdown(successData?.vuelto)" :key="item.label">
+                                    <div :class="item.isCoin ? 'bg-emerald-50 border-emerald-100' : 'bg-indigo-50 border-indigo-100'"
+                                         class="flex items-center justify-between px-2 py-1.5 rounded-xl border">
+                                        <span class="text-[9px] font-black text-slate-500" x-text="item.label"></span>
+                                        <span :class="item.isCoin ? 'bg-emerald-500' : 'bg-indigo-500'" 
+                                              class="w-5 h-5 rounded-lg text-white text-[9px] font-black flex items-center justify-center shadow-sm" 
+                                              x-text="item.count"></span>
+                                    </div>
+                                </template>
+                            </div>
                         </div>
                     </div>
                 </template>
             </div>
 
-            <div class="flex flex-col gap-3">
+            <div class="flex flex-col gap-2 shrink-0">
                 <button
                     @click="printTicket()"
-                    class="w-full py-4 bg-slate-900 rounded-[20px] text-sm font-black text-white hover:bg-slate-800 transition-all active:scale-95 shadow-xl shadow-slate-900/10 flex items-center justify-center gap-3"
+                    class="w-full py-3 bg-slate-900 rounded-[15px] text-xs font-black text-white hover:bg-slate-800 transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2"
                 >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2-2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 012-2H9a2 2 0 012 2v4a2 2 0 01-2 2zM17 11V7a2 2 0 00-2-2H9a2 2 0 00-2 2v4h8z"/></svg>
-                    IMPRIMIR TICKET
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2-2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 012-2H9a2 2 0 012 2v4a2 2 0 01-2 2zM17 11V7a2 2 0 00-2-2H9a2 2 0 00-2 2v4h8z"/></svg>
+                    TICKET
                 </button>
                 <button
                     type="button"
                     @click="closeSuccess()"
-                    class="w-full py-4 bg-white border-2 border-slate-100 rounded-[20px] text-sm font-black text-slate-500 hover:bg-slate-50 transition-all hover:text-slate-800"
+                    class="w-full py-2.5 bg-white border border-slate-200 rounded-[15px] text-xs font-black text-slate-500 hover:bg-slate-50 transition-all"
                 >Nueva Venta</button>
             </div>
         </div>
@@ -504,9 +529,9 @@
          x-transition:enter-end="opacity-100 scale-100"
          class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm"
     >
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100">
-            {{-- Header --}}
-            <div class="p-6 bg-slate-50 border-b border-slate-100 flex items-center gap-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md flex flex-col max-h-[90vh] overflow-hidden border border-slate-100">
+            {{-- Header (Fijo) --}}
+            <div class="p-6 bg-slate-50 border-b border-slate-100 flex items-center gap-4 shrink-0">
                 <div :class="auditType === 'apertura' ? 'bg-indigo-500' : 'bg-rose-500'" 
                      class="p-3 rounded-2xl shadow-lg shadow-indigo-500/20">
                     <svg x-show="auditType === 'apertura'" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -518,8 +543,38 @@
                 </div>
             </div>
 
-            {{-- Body --}}
-            <div class="p-8">
+            {{-- Body (Scrollable) --}}
+            <div class="p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200">
+                
+                {{-- Shift Summary (Only for Cierre) --}}
+                <div x-show="auditType === 'cierre'" class="mb-6">
+                    <div x-show="isSummaryLoading" class="flex flex-col items-center justify-center py-4 text-slate-400 gap-2 animate-pulse bg-slate-50 rounded-2xl border border-slate-100 italic">
+                        <span class="text-[9px] font-black uppercase tracking-widest">Calculando balances...</span>
+                    </div>
+                    
+                    <div x-show="!isSummaryLoading" class="p-4 bg-slate-900 rounded-2xl shadow-xl border border-slate-800">
+                        <h4 class="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-3 border-b border-white/5 pb-2">Estado de Caja Actual</h4>
+                        <div class="space-y-2 text-xs">
+                            <div class="flex justify-between items-center text-slate-300">
+                                <span class="font-medium opacity-60">Ventas (+)</span>
+                                <span class="font-black text-emerald-400" x-text="fmt(summary.ventas)"></span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-300">
+                                <span class="font-medium opacity-60">Gastos (-)</span>
+                                <span class="font-black text-rose-400" x-text="'- ' + fmt(summary.egresos)"></span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-300">
+                                <span class="font-medium opacity-60">Fondo Inicial</span>
+                                <span class="font-bold opacity-80" x-text="fmt(summary.apertura)"></span>
+                            </div>
+                            <div class="pt-2 mt-2 border-t border-white/10 flex justify-between items-center">
+                                <span class="text-[9px] font-black text-indigo-400 uppercase">Debes Entregar:</span>
+                                <span class="text-lg font-black text-white font-mono tracking-tighter" x-text="fmt(summary.esperado)"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Efectivo Físico en Caja</label>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -534,18 +589,88 @@
                         autofocus
                     >
                 </div>
+
+                {{-- Calculadora de Denominaciones --}}
+                <div class="mt-6 border-t border-slate-100 pt-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Calculadora de Arqueo</span>
+                        <button @click="billCounts = {}; updateAuditFromCalculator()" class="text-[9px] font-black text-rose-400 uppercase tracking-widest hover:text-rose-600 transition-colors">Limpiar</button>
+                    </div>
+
+                    <div class="space-y-6">
+                        {{-- Sección Billetes --}}
+                        <div>
+                            <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2-2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                Billetes
+                            </p>
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-3">
+                                <template x-for="d in denominations.filter(v => v > 1)" :key="d">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-12 text-right">
+                                            <span class="text-[10px] font-black text-slate-500" x-text="fmt(d)"></span>
+                                        </div>
+                                        <div class="flex-1 relative">
+                                            <input 
+                                                type="number" 
+                                                min="0"
+                                                x-model="billCounts[d]"
+                                                @input="updateAuditFromCalculator()"
+                                                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black text-slate-800 focus:border-indigo-400 focus:bg-white transition-all outline-none"
+                                                placeholder="0"
+                                            >
+                                            <div class="absolute -top-2 -right-1" x-show="billCounts[d] > 0">
+                                                <span class="bg-indigo-500 text-white text-[8px] px-1 rounded-full font-black shadow-sm" x-text="fmt(d * billCounts[d])"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        {{-- Sección Monedas --}}
+                        <div>
+                            <p class="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                Monedas
+                            </p>
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-3">
+                                <template x-for="d in denominations.filter(v => v <= 1)" :key="d">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-12 text-right">
+                                            <span class="text-[10px] font-black text-slate-500" x-text="fmt(d)"></span>
+                                        </div>
+                                        <div class="flex-1 relative">
+                                            <input 
+                                                type="number" 
+                                                min="0"
+                                                x-model="billCounts[d]"
+                                                @input="updateAuditFromCalculator()"
+                                                class="w-full px-3 py-2 bg-emerald-50/30 border border-slate-200 rounded-xl text-xs font-black text-slate-800 focus:border-emerald-400 focus:bg-white transition-all outline-none"
+                                                placeholder="0"
+                                            >
+                                            <div class="absolute -top-2 -right-1" x-show="billCounts[d] > 0">
+                                                <span class="bg-emerald-500 text-white text-[8px] px-1 rounded-full font-black shadow-sm" x-text="fmt(d * billCounts[d])"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 
                 <p x-show="auditType === 'apertura'" class="mt-4 text-[10px] text-slate-400 font-bold leading-relaxed px-2">
                     * El sistema comparará este monto con el fondo asignado de 
                     <span class="text-indigo-500">{{ format_currency(get_global_setting('default_opening_amount', 50)) }}</span>.
                 </p>
                 <p x-show="auditType === 'cierre'" class="mt-4 text-[10px] text-slate-400 font-bold leading-relaxed px-2">
-                    * Ingresa el total de dinero (billetes + monedas) que hay físicamente en la gaveta.
+                    * Asegúrate de que el total coincida con el dinero físico en gaveta. Las diferencias serán registradas automáticamente.
                 </p>
             </div>
 
-            {{-- Footer --}}
-            <div class="p-6 bg-slate-50 flex items-center gap-3">
+            {{-- Footer (Fijo) --}}
+            <div class="p-6 bg-slate-50 border-t border-slate-100 flex items-center gap-3 shrink-0">
                 <button @click="showAuditModal = false" 
                         class="flex-1 px-4 py-3 text-slate-500 font-black text-xs uppercase tracking-widest hover:text-slate-800 transition-colors">
                     Cancelar
@@ -663,9 +788,46 @@ function pos() {
 
         // GASTO MODAL
         showGastoModal: false,
-        gastoMonto: 0,
         gastoDescripcion: '',
         isAuditLoading: false,
+        isSummaryLoading: false,
+
+        // SUMMARY DATA
+        summary: { ventas: 0, egresos: 0, apertura: 0, esperado: 0 },
+
+        // CALCULADORA DE DENOMINACIONES
+        denominations: [100, 50, 20, 10, 5, 1, 0.25, 0.10, 0.05, 0.01],
+        billCounts: {},
+
+        updateAuditFromCalculator() {
+            let total = 0;
+            this.denominations.forEach(d => {
+                total += (parseFloat(d) * (parseInt(this.billCounts[d]) || 0));
+            });
+            this.auditMonto = total.toFixed(2);
+        },
+
+        getVueltoBreakdown(amount) {
+            if (!amount || amount <= 0) return [];
+            
+            // Trabajamos con centavos (enteros) para evitar errores de precisión de JS
+            let remainingCents = Math.round(parseFloat(amount) * 100);
+            let breakdown = [];
+            
+            // Ordenar de mayor a menor
+            const sortedDenoms = [...this.denominations].sort((a,b) => b - a);
+            
+            for (const d of sortedDenoms) {
+                const dCents = Math.round(parseFloat(d) * 100);
+                const count = Math.floor(remainingCents / dCents);
+                
+                if (count > 0) {
+                    breakdown.push({ label: this.fmt(d), val: d, count: count, isCoin: d < 1 });
+                    remainingCents -= count * dCents;
+                }
+            }
+            return breakdown;
+        },
 
         total() {
             return this.cart.reduce((s, i) => s + i.precio * i.qty, 0);
@@ -708,20 +870,49 @@ function pos() {
             this.products     = [];
             this.errorMsg     = '';
             this.recibido     = '';
+            this.billCounts   = {};
+            this.auditMonto   = 0;
 
             if (!abierta) {
                 if (autoOpen) {
-                    // Apertura automática sin arqueo
                     this.autoAbrirCaja();
                 } else {
-                    // Requiere arqueo manual
-                    this.auditType  = 'apertura';
-                    this.auditMonto = {{ get_global_setting('default_opening_amount', 50) }};
-                    this.showAuditModal = true;
+                    this.openAuditModal('apertura');
                 }
             }
 
             this.init();
+        },
+
+        async openAuditModal(type) {
+            this.auditType = type;
+            this.auditMonto = 0;
+            this.billCounts = {};
+            this.errorMsg = '';
+            
+            if (type === 'cierre') {
+                await this.fetchSummary();
+            } else if (type === 'apertura') {
+                this.auditMonto = {{ get_global_setting('default_opening_amount', 50) }};
+            }
+            
+            this.showAuditModal = true;
+        },
+
+        async fetchSummary() {
+            if (!this.cajaId) return;
+            this.isSummaryLoading = true;
+            try {
+                const res = await fetch(`${this.baseUrl}cajas/${this.cajaId}/summary`);
+                if (res.ok) {
+                    this.summary = await res.json();
+                    this.auditMonto = 0; // Reset count
+                }
+            } catch (e) {
+                console.error('Error fetching summary:', e);
+            } finally {
+                this.isSummaryLoading = false;
+            }
         },
 
         async autoAbrirCaja() {
@@ -760,9 +951,7 @@ function pos() {
                 const data = await res.json();
                 
                 if (res.status === 422 && data.error && (data.error.includes('cerrada') || data.error.includes('abierta'))) {
-                    this.auditType = 'apertura';
-                    this.auditMonto = {{ get_global_setting('default_opening_amount', 50) }};
-                    this.showAuditModal = true;
+                    this.openAuditModal('apertura');
                     return;
                 }
 
@@ -789,6 +978,7 @@ function pos() {
                 this.cart.push({ id: p.id, nombre: p.nombre, precio: p.precio, qty: 1, stock: p.stock });
             }
             this.errorMsg = '';
+            if (this.$refs.scanSound) this.$refs.scanSound.play().catch(() => {});
             this.init();
         },
 
@@ -838,7 +1028,18 @@ function pos() {
                 }
 
                 if (data.success) {
-                    this.successData = { id: data.venta_id, total: data.total, vuelto: this.vuelto(), recibido: parseFloat(this.recibido) || 0 };
+                    const totalSrv = parseFloat(data.total);
+                    const recibidoNum = parseFloat(this.recibido) || 0;
+                    // Recalcular vuelto basado en el total exacto procesado por el servidor
+                    const vueltoReal = recibidoNum > totalSrv ? (recibidoNum - totalSrv).toFixed(2) : 0;
+                    
+                    this.successData = { 
+                        id: data.venta_id, 
+                        total: totalSrv, 
+                        vuelto: vueltoReal, 
+                        recibido: recibidoNum 
+                    };
+                    
                     this.cart = [];
                     this.query = '';
                     this.products = [];
@@ -921,10 +1122,12 @@ function pos() {
 
         handleKey(e) {
             if (e.key === 'F5') { e.preventDefault(); this.processSale(); }
+            if (e.key === 'F2') { e.preventDefault(); this.init(); }
             if (e.key === 'Escape') {
                 if (this.successData) { this.closeSuccess(); }
                 else if (this.showAuditModal) { this.showAuditModal = false; }
-                else { this.query = ''; this.products = []; }
+                else if (this.showGastoModal) { this.showGastoModal = false; }
+                else { this.query = ''; this.products = []; this.init(); }
             }
         },
 
@@ -943,6 +1146,13 @@ function pos() {
                 fd.append(field, this.auditMonto);
                 if (this.auditType === 'apertura') {
                     fd.append('monto_esperado', {{ get_global_setting('default_opening_amount', 50) }});
+                }
+
+                // Enviar desglose de denominaciones
+                for (const d in this.billCounts) {
+                    if (this.billCounts[d] > 0) {
+                        fd.append(`denominaciones[${d}]`, this.billCounts[d]);
+                    }
                 }
 
                 const res = await fetch(url, {

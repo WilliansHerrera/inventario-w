@@ -1,5 +1,5 @@
 # 🚀 Inventario-w | Industrial POS & Inventory System
-## Version 1.9.0-Beta (Latest Stable)
+## Version 2.0.0 (Premium Audit Edition)
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="300" alt="Laravel Logo">
@@ -11,7 +11,7 @@
 ## 🌟 Overview
 **Inventario-w** is a high-performance, industrial-grade Point of Sale (POS) and Inventory Management system. Built on **Laravel 12** and **MoonShine 4**, it offers a complete ecosystem for modern businesses, combining a robust web administrative panel with lightweight native Windows terminals.
 
-The system is optimized for **offline-first** operations and **high-speed auditing**, ensuring that business owners have full control over their cash flow and stock at all times.
+The system is optimized for **offline-first** operations and **high-speed auditing**, featuring a state-of-the-art **Shift Audit System** that ensures zero-loss cash management.
 
 ---
 
@@ -25,12 +25,14 @@ The system is optimized for **offline-first** operations and **high-speed auditi
 
 ---
 
-## ✨ Key Features (v1.9.0-Beta)
+## ✨ Key Features (v2.0.0)
 
-### 🏦 Advanced Cash Auditing (New)
+### 🏦 Advanced Cash Auditing (Premium)
 - **Shift Management (Turnos):** Comprehensive control over opening and closing jornadas.
-- **Physical Count (Arqueos):** Track differences between expected balance and real cash in drawer.
+- **Arqueo Asistido (New):** Cashiers see a real-time summary of sales, expenses, and expected balance before closing the drawer.
+- **Physical Count (Arqueos):** Highly detailed tracking of differences between expected balance and real cash in drawer.
 - **Expense Tracking (Egresos):** Register expenses and withdrawals (Proveedores, Servicios, etc.) directly from the POS or Admin panel.
+- **Visual Audit Detail:** Refactored audit pages with Card-based layouts (`Box` components) and financial breakdown tables.
 - **Global Store Start:** One-click "Iniciar Jornada Única" to open all cash registers simultaneously.
 
 ### 🛒 Premium Industrial POS

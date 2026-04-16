@@ -19,12 +19,16 @@ class CajaTurno extends Model
         'diferencia', 
         'abierto_at', 
         'cerrado_at', 
-        'estado'
+        'estado',
+        'denominaciones_apertura',
+        'denominaciones_cierre'
     ];
 
     protected $casts = [
         'abierto_at' => 'datetime',
         'cerrado_at' => 'datetime',
+        'denominaciones_apertura' => 'array',
+        'denominaciones_cierre' => 'array',
     ];
 
     public function caja()

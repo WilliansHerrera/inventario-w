@@ -23,7 +23,7 @@ use MoonShine\Laravel\Resources\MoonShineUserRoleResource;
 use App\MoonShine\Resources\Venta\VentaResource;
 use App\MoonShine\Resources\VentaDetalle\VentaDetalleResource;
 use App\MoonShine\Resources\GlobalSetting\GlobalSettingResource;
-use App\MoonShine\Resources\CajaTurnoResource;
+use App\MoonShine\Resources\CajaTurno\CajaTurnoResource;
 use App\MoonShine\Pages\SystemUpdatePage;
 use App\MoonShine\Pages\POS;
 use App\MoonShine\Pages\BackupPage;

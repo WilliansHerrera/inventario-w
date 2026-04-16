@@ -20,14 +20,16 @@ class CajaActionController extends Controller
     {
         $request->validate([
             'monto_apertura' => 'required|numeric|min:0',
-            'monto_esperado' => 'nullable|numeric|min:0'
+            'monto_esperado' => 'nullable|numeric|min:0',
+            'denominaciones' => 'nullable|array'
         ]);
 
         try {
             $this->service->openShift(
                 caja: $caja, 
                 initialBalanceReal: (float) $request->monto_apertura,
-                expectedBalance: $request->monto_esperado ? (float) $request->monto_esperado : null
+                expectedBalance: $request->monto_esperado ? (float) $request->monto_esperado : null,
+                denominaciones: $request->denominaciones
             );
 
             if ($request->wantsJson()) {
@@ -48,10 +50,17 @@ class CajaActionController extends Controller
 
     public function cerrarTurno(Request $request, Caja $caja)
     {
-        $request->validate(['monto_real' => 'required|numeric|min:0']);
+        $request->validate([
+            'monto_real' => 'required|numeric|min:0',
+            'denominaciones' => 'nullable|array'
+        ]);
 
         try {
-            $this->service->closeShift($caja, (float) $request->monto_real);
+            $this->service->closeShift(
+                caja: $caja, 
+                montoReal: (float) $request->monto_real,
+                denominaciones: $request->denominaciones
+            );
 
             if ($request->wantsJson()) {
                 return response()->json(['success' => true, 'message' => 'Jornada cerrada con éxito.']);
@@ -136,5 +145,10 @@ class CajaActionController extends Controller
         }
 
         return back();
+    }
+
+    public function getSummary(Caja $caja)
+    {
+        return response()->json($caja->getShiftSummary());
     }
 }
