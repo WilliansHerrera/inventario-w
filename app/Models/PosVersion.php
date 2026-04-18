@@ -10,6 +10,7 @@ class PosVersion extends Model
         'version',
         'changelog',
         'filename',
+        'signature',
         'is_latest',
         'release_date',
     ];

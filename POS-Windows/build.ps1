@@ -16,18 +16,18 @@ if (!(Get-Command cargo -ErrorAction SilentlyContinue)) {
 
 # 2. Instalar dependencias del proyecto
 Write-Host ">> Instalando dependencias de Node..." -ForegroundColor Yellow
-npm install
+npm install --prefix POS-Windows
 
 # 3. Compilar el proyecto Tauri
 Write-Host ">> Compilando el binario .EXE (Esto tardará unos minutos la primera vez)..." -ForegroundColor Yellow
-npm run tauri build
+npm run --prefix POS-Windows tauri build
 
 # 4. Mover el instalador a la carpeta storage de Laravel
-$sourceMsi = Get-ChildItem -Path "src-tauri\target\release\bundle\msi\*.msi" | Select-Object -First 1
-$sourceExe = Get-ChildItem -Path "src-tauri\target\release\*.exe" | Select-Object -First 1 # Depende de la config de Tauri
+$sourceMsi = Get-ChildItem -Path "POS-Windows\src-tauri\target\release\bundle\msi\*.msi" | Select-Object -First 1
+$sourceExe = Get-ChildItem -Path "POS-Windows\src-tauri\target\release\*.exe" | Select-Object -First 1 # Depende de la config de Tauri
 
 # Buscamos el instalador generado
-$outputDir = "..\storage\app\public\pos"
+$outputDir = "storage\app\public\pos"
 if (!(Test-Path $outputDir)) {
     New-Item -ItemType Directory -Path $outputDir
 }

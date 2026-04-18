@@ -44,7 +44,7 @@ class SyncController extends Controller
             'pub_date' => $version->release_date ? $version->release_date->toRfc3339String() : $version->created_at->toRfc3339String(),
             'platforms' => [
                 'windows-x86_64' => [
-                    'signature' => '', // TODO: Implementar firmas si se activa en Tauri
+                    'signature' => $version->signature ?? '=== DUMMY_TRIAL_SIGNATURE_V2.0.0 ===', // Dummy for testing as requested
                     'url'       => $url,
                 ],
                 'linux-x86_64' => [

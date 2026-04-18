@@ -60,13 +60,7 @@
     "security": {
       "csp": null
     },
-    "updater": {
-      "active": true,
-      "endpoints": [
-          "http://localhost/Inventario-w/public/api/update/check"
-      ],
-      "dialog": true
-    },
+
     "windows": [
       {
         "fullscreen": false,
