@@ -15,6 +15,7 @@ use MoonShine\Contracts\Core\PageContract;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use MoonShine\Contracts\Core\DependencyInjection\FieldsContract;
 use MoonShine\Support\Attributes\AsyncMethod;
+use MoonShine\Laravel\MoonShineAuth;
 
 /**
  * @extends ModelResource<Compra, CompraIndexPage, CompraFormPage, CompraDetailPage>

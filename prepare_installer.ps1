@@ -93,18 +93,26 @@ New-Item -ItemType Directory -Path "$sourcePath\storage\framework\cache" -Force 
 New-Item -ItemType Directory -Path "$sourcePath\public\downloads" -Force | Out-Null
 
 # Copiar el instalador del POS a la carpeta de descargas del servidor
+$posMsi = "storage/app/public/pos/POS-Setup.msi"
+if (Test-Path $posMsi) {
+    Write-Host "Copiando terminal POS MSI a la carpeta de descargas..." -ForegroundColor Gray
+    Copy-Item $posMsi -Destination "$sourcePath\public\downloads\POS-Setup.msi" -Force
+} else {
+    Write-Warning "No se encontro el instalador MSI de la caja POS. Se saltara la inclusion."
+}
+
 $posExe = "POS-Windows\src-tauri\target\release\POS-Inventario-W.exe"
 if (Test-Path $posExe) {
-    Write-Host "Copiando terminal POS a la carpeta de descargas..." -ForegroundColor Gray
+    Write-Host "Copiando executable POS legacy..." -ForegroundColor Gray
     Copy-Item $posExe -Destination "$sourcePath\public\downloads\POS-Scanner-Setup.exe" -Force
-} else {
-    Write-Warning "No se encontro el ejecutable de la caja POS. Se saltara la inclusion para descarga."
 }
+
 
 # 4. Copiar Scripts de Instalación Interna
 Copy-Item "internal_setup.ps1" -Destination $distPath
 Copy-Item "Control-Panel.bat" -Destination $distPath
 Copy-Item "pos_inventory_icon_1775924858045.png" -Destination $distPath
+Copy-Item "MANUAL_USUARIO.md" -Destination $distPath
 
 Write-Host "--- Preparación Lista ---" -ForegroundColor Green
 Write-Host "Ahora puedes abrir 'inventario_installer.iss' en Inno Setup y pulsar Compilar."
