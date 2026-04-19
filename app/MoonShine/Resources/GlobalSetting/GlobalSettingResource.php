@@ -63,6 +63,18 @@ class GlobalSettingResource extends ModelResource
         return [];
     }
 
+    public function getRedirectAfterSave(): ?string
+    {
+        return $this->getIndexPageUrl();
+    }
+
+    protected function afterSave(\MoonShine\Contracts\Core\TypeCasts\DataWrapperContract $item, \MoonShine\Contracts\Core\DependencyInjection\FieldsContract $fields): \MoonShine\Contracts\Core\TypeCasts\DataWrapperContract
+    {
+        \MoonShine\Laravel\MoonShineUI::toast('Configuración guardada exitosamente.', \MoonShine\Support\Enums\ToastType::SUCCESS);
+        
+        return $item;
+    }
+
     protected function rules(mixed $item): array
     {
         return [];

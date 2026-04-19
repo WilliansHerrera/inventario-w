@@ -96,9 +96,9 @@ return [
     ],
 
     // Localizations
-    'locale' => 'en',
+    'locale' => 'es',
     'locale_key' => ChangeLocale::KEY,
     'locales' => [
-        // en
+        'en', 'es', 'pt', 'fr'
     ],
 ];

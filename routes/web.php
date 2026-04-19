@@ -145,7 +145,7 @@ Route::get('/web/update-now', function () {
 
 
 // Impresión de Código de Barras
-Route::get('/products/barcode/{producto}', [\App\Http\Controllers\Admin\BarcodeController::class, 'print'])
+Route::get('/products/barcode/{producto?}', [\App\Http\Controllers\Admin\BarcodeController::class, 'print'])
     ->middleware(['web', 'auth:moonshine'])
     ->name('admin.products.barcode');
 

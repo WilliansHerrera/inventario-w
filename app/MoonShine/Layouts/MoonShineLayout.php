@@ -12,6 +12,7 @@ use MoonShine\Contracts\ColorManager\ColorManagerContract;
 use MoonShine\Contracts\ColorManager\PaletteContract;
 use MoonShine\UI\Components\ActionButton;
 use MoonShine\UI\Components\Layout\Div;
+use MoonShine\MenuManager\MenuDivider;
 use MoonShine\MenuManager\MenuGroup;
 use MoonShine\MenuManager\MenuItem;
 use App\MoonShine\Resources\Locale\LocaleResource;
@@ -27,6 +28,8 @@ use App\MoonShine\Resources\CajaTurno\CajaTurnoResource;
 use App\MoonShine\Pages\SystemUpdatePage;
 use App\MoonShine\Pages\POS;
 use App\MoonShine\Pages\BackupPage;
+use App\MoonShine\Resources\Compra\CompraResource;
+use App\MoonShine\Resources\CompraDetalle\CompraDetalleResource;
 
 final class MoonShineLayout extends AppLayout
 {
@@ -103,25 +106,28 @@ final class MoonShineLayout extends AppLayout
             MenuGroup::make('Inventario', [
                 MenuItem::make(ProductoResource::class, 'Catálogo de Productos')->icon('tag'),
                 MenuItem::make(InventarioResource::class, 'Control de Stock')->icon('archive-box'),
+                MenuItem::make(\App\MoonShine\Pages\BarcodePrintingPage::class, 'Imprimir Viñetas')->icon('qr-code'),
+                MenuItem::make(CompraResource::class, 'Recepción de Compras')->icon('shopping-bag'),
+                MenuItem::make(\App\MoonShine\Resources\Proveedor\ProveedorResource::class, 'Proveedores')->icon('users'),
+                MenuItem::make(\App\MoonShine\Resources\ProductoCostoHistorial\ProductoCostoHistorialResource::class, 'Historial de Costos')->icon('presentation-chart-line'),
             ])->icon('building-storefront'),
 
             MenuGroup::make('Configuración', [
+                MenuDivider::make('Preferencias Regionales'),
                 MenuItem::make(LocaleResource::class, 'Sucursales / Locales')->icon('map-pin'),
                 MenuItem::make(GlobalSettingResource::class, 'Ajustes del Sistema')->icon('globe-alt'),
-            ])->icon('cog-6-tooth'),
 
-            MenuGroup::make('Autenticación', [
+                MenuDivider::make('Seguridad y Accesos'),
                 MenuItem::make(MoonShineUserResource::class, 'Usuarios Administrativos')->icon('users'),
                 MenuItem::make(MoonShineUserRoleResource::class, 'Roles y Permisos')->icon('shield-check'),
-            ])->icon('lock-closed'),
 
-            MenuGroup::make('Sistema', [
+                MenuDivider::make('Sistema y Mantenimiento'),
                 MenuItem::make(SystemUpdatePage::class, 'Actualizaciones (Web/POS)')->icon('cloud-arrow-up'),
                 MenuItem::make(BackupPage::class, 'Copias de Seguridad (Backup)')->icon('circle-stack'),
                 MenuItem::make(fn() => route('admin.pos.download'), 'Descargar Terminal POS (EXE)')
                     ->icon('arrow-down-tray')
                     ->blank(),
-            ])->icon('server-stack'),
+            ])->icon('cog-6-tooth'),
         ];
     }
 
@@ -132,9 +138,9 @@ final class MoonShineLayout extends AppLayout
     {
         parent::colors($colorManager);
 
-        $paletteClass = get_global_setting('theme_palette');
+        $paletteClass = get_global_setting('theme_palette', PurplePalette::class);
         
-        if ($paletteClass && class_exists($paletteClass)) {
+        if (class_exists($paletteClass)) {
             $palette = new $paletteClass();
             if ($palette instanceof \MoonShine\Contracts\ColorManager\PaletteContract) {
                 $colorManager->palette($palette);

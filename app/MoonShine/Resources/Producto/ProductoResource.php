@@ -40,10 +40,10 @@ class ProductoResource extends ModelResource
     {
         return [
             ActionButton::make(
-                '',
+                'Imprimir',
                 fn(Producto $item) => route('admin.products.barcode', $item)
             )
-            ->icon('barcode')
+            ->icon('qr-code')
             ->blank()
             ->primary()
             ->customAttributes(['title' => 'Imprimir Código de Barras'])
@@ -52,6 +52,34 @@ class ProductoResource extends ModelResource
 
     public function detailButtons(): array
     {
-        return $this->indexButtons();
+        return [
+            ActionButton::make(
+                'Imprimir Código de Barras',
+                fn(Producto $item) => route('admin.products.barcode', $item)
+            )
+            ->icon('qr-code')
+            ->blank()
+            ->primary()
+            ->customAttributes(['class' => 'btn-lg'])
+        ];
+    }
+
+    public function actions(): array
+    {
+        return [
+            ActionButton::make('Imprimir Seleccionados')
+                ->icon('qr-code')
+                ->blank()
+                ->primary()
+                ->method('bulkPrint')
+                ->bulk()
+        ];
+    }
+
+    public function bulkPrint(\Illuminate\Support\Collection $models): \Symfony\Component\HttpFoundation\Response
+    {
+        $ids = $models->pluck('id')->implode(',');
+        
+        return response()->redirectTo(route('admin.products.barcode', ['ids' => $ids]));
     }
 }

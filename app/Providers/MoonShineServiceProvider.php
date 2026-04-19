@@ -18,6 +18,12 @@ use App\MoonShine\Resources\Venta\VentaResource;
 use App\MoonShine\Resources\VentaDetalle\VentaDetalleResource;
 use App\MoonShine\Resources\GlobalSetting\GlobalSettingResource;
 use App\MoonShine\Resources\CajaTurno\CajaTurnoResource;
+use App\MoonShine\Resources\InventarioMovimientoResource;
+use App\MoonShine\Pages\BarcodePrintingPage;
+use App\MoonShine\Resources\Proveedor\ProveedorResource;
+use App\MoonShine\Resources\Compra\CompraResource;
+use App\MoonShine\Resources\ProductoCostoHistorial\ProductoCostoHistorialResource;
+use App\MoonShine\Resources\CompraDetalle\CompraDetalleResource;
 
 class MoonShineServiceProvider extends ServiceProvider
 {
@@ -38,12 +44,18 @@ class MoonShineServiceProvider extends ServiceProvider
                 VentaDetalleResource::class,
                 GlobalSettingResource::class,
                 CajaTurnoResource::class,
+                InventarioMovimientoResource::class,
+                ProveedorResource::class,
+                CompraResource::class,
+                ProductoCostoHistorialResource::class,
+                CompraDetalleResource::class,
             ])
             ->pages([
                 ...$core->getConfig()->getPages(),
                 \App\MoonShine\Pages\POS::class,
                 \App\MoonShine\Pages\BackupPage::class,
                 \App\MoonShine\Pages\SystemUpdatePage::class,
+                \App\MoonShine\Pages\BarcodePrintingPage::class,
             ])
         ;
     }

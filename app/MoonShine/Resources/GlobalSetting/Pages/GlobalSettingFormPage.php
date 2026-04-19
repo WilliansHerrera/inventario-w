@@ -40,49 +40,31 @@ class GlobalSettingFormPage extends FormPage
     protected function fields(): iterable
     {
         $countryData = [
-            'México' => ['locale' => 'es', 'currency_code' => 'MXN', 'currency_symbol' => '$'],
-            'El Salvador' => ['locale' => 'es', 'currency_code' => 'USD', 'currency_symbol' => '$'],
-            'España' => ['locale' => 'es', 'currency_code' => 'EUR', 'currency_symbol' => '€'],
-            'USA' => ['locale' => 'en', 'currency_code' => 'USD', 'currency_symbol' => '$'],
-            'Colombia' => ['locale' => 'es', 'currency_code' => 'COP', 'currency_symbol' => '$'],
-            'Argentina' => ['locale' => 'es', 'currency_code' => 'ARS', 'currency_symbol' => '$'],
-            'Chile' => ['locale' => 'es', 'currency_code' => 'CLP', 'currency_symbol' => '$'],
-            'Perú' => ['locale' => 'es', 'currency_code' => 'PEN', 'currency_symbol' => 'S/'],
-            'Ecuador' => ['locale' => 'es', 'currency_code' => 'USD', 'currency_symbol' => '$'],
-            'Panamá' => ['locale' => 'es', 'currency_code' => 'USD', 'currency_symbol' => '$'],
-            'Uruguay' => ['locale' => 'es', 'currency_code' => 'UYU', 'currency_symbol' => '$'],
-            'Paraguay' => ['locale' => 'es', 'currency_code' => 'PYG', 'currency_symbol' => '₲'],
-            'Bolivia' => ['locale' => 'es', 'currency_code' => 'BOB', 'currency_symbol' => 'Bs.'],
-            'Costa Rica' => ['locale' => 'es', 'currency_code' => 'CRC', 'currency_symbol' => '₡'],
-            'Guatemala' => ['locale' => 'es', 'currency_code' => 'GTQ', 'currency_symbol' => 'Q'],
-            'Honduras' => ['locale' => 'es', 'currency_code' => 'HNL', 'currency_symbol' => 'L'],
-            'Nicaragua' => ['locale' => 'es', 'currency_code' => 'NIO', 'currency_symbol' => 'C$'],
-            'Dominicana' => ['locale' => 'es', 'currency_code' => 'DOP', 'currency_symbol' => 'RD$'],
-            'Venezuela' => ['locale' => 'es', 'currency_code' => 'VES', 'currency_symbol' => 'Bs.'],
-            'Brasil' => ['locale' => 'es', 'currency_code' => 'BRL', 'currency_symbol' => 'R$'],
-            'Francia' => ['locale' => 'en', 'currency_code' => 'EUR', 'currency_symbol' => '€'],
-            'Alemania' => ['locale' => 'en', 'currency_code' => 'EUR', 'currency_symbol' => '€'],
-            'Canadá' => ['locale' => 'en', 'currency_code' => 'CAD', 'currency_symbol' => '$'],
-            'Reino Unido' => ['locale' => 'en', 'currency_code' => 'GBP', 'currency_symbol' => '£'],
+            'México' => ['locale' => 'es', 'currency_code' => 'MXN', 'currency_symbol' => '$', 'iva' => 16.00],
+            'El Salvador' => ['locale' => 'es', 'currency_code' => 'USD', 'currency_symbol' => '$', 'iva' => 13.00],
+            'España' => ['locale' => 'es', 'currency_code' => 'EUR', 'currency_symbol' => '€', 'iva' => 21.00],
+            'USA' => ['locale' => 'en', 'currency_code' => 'USD', 'currency_symbol' => '$', 'iva' => 0.00],
+            'Colombia' => ['locale' => 'es', 'currency_code' => 'COP', 'currency_symbol' => '$', 'iva' => 19.00],
+            'Argentina' => ['locale' => 'es', 'currency_code' => 'ARS', 'currency_symbol' => '$', 'iva' => 21.00],
+            'Chile' => ['locale' => 'es', 'currency_code' => 'CLP', 'currency_symbol' => '$', 'iva' => 19.00],
+            'Perú' => ['locale' => 'es', 'currency_code' => 'PEN', 'currency_symbol' => 'S/', 'iva' => 18.00],
+            'Ecuador' => ['locale' => 'es', 'currency_code' => 'USD', 'currency_symbol' => '$', 'iva' => 15.00],
+            'Panamá' => ['locale' => 'es', 'currency_code' => 'USD', 'currency_symbol' => '$', 'iva' => 7.00],
+            'Uruguay' => ['locale' => 'es', 'currency_code' => 'UYU', 'currency_symbol' => '$', 'iva' => 22.00],
+            'Paraguay' => ['locale' => 'es', 'currency_code' => 'PYG', 'currency_symbol' => '₲', 'iva' => 10.00],
+            'Bolivia' => ['locale' => 'es', 'currency_code' => 'BOB', 'currency_symbol' => 'Bs.', 'iva' => 13.00],
+            'Costa Rica' => ['locale' => 'es', 'currency_code' => 'CRC', 'currency_symbol' => '₡', 'iva' => 13.00],
+            'Guatemala' => ['locale' => 'es', 'currency_code' => 'GTQ', 'currency_symbol' => 'Q', 'iva' => 12.00],
+            'Honduras' => ['locale' => 'es', 'currency_code' => 'HNL', 'currency_symbol' => 'L', 'iva' => 15.00],
+            'Nicaragua' => ['locale' => 'es', 'currency_code' => 'NIO', 'currency_symbol' => 'C$', 'iva' => 15.00],
+            'Dominicana' => ['locale' => 'es', 'currency_code' => 'DOP', 'currency_symbol' => 'RD$', 'iva' => 18.00],
+            'Venezuela' => ['locale' => 'es', 'currency_code' => 'VES', 'currency_symbol' => 'Bs.', 'iva' => 16.00],
+            'Brasil' => ['locale' => 'es', 'currency_code' => 'BRL', 'currency_symbol' => 'R$', 'iva' => 17.00],
         ];
 
         return [
             Select::make('País', 'country_name')
                 ->options(array_combine(array_keys($countryData), array_keys($countryData)))
-                ->customAttributes([
-                    '@change' => "
-                        const data = " . json_encode($countryData) . ";
-                        const val = \$event.target.value;
-                        if (val && data[val]) {
-                            const info = data[val];
-                            if (typeof reactive !== 'undefined') {
-                                reactive.locale = info.locale;
-                                reactive.currency_code = info.currency_code;
-                                reactive.currency_symbol = info.currency_symbol;
-                            }
-                        }
-                    "
-                ])
                 ->reactive(function (\MoonShine\Contracts\Core\DependencyInjection\FieldsContract $fields, ?string $value) use ($countryData) {
                     if ($value && isset($countryData[$value])) {
                         $data = $countryData[$value];
@@ -90,6 +72,7 @@ class GlobalSettingFormPage extends FormPage
                         $fields->findByColumn('locale')?->setValue($data['locale']);
                         $fields->findByColumn('currency_code')?->setValue($data['currency_code']);
                         $fields->findByColumn('currency_symbol')?->setValue($data['currency_symbol']);
+                        $fields->findByColumn('iva_porcentaje')?->setValue($data['iva']);
                     }
 
                     return $fields;
@@ -100,7 +83,10 @@ class GlobalSettingFormPage extends FormPage
                 ->options([
                     'es' => 'Español',
                     'en' => 'English',
+                    'pt' => 'Português',
+                    'fr' => 'Français',
                 ])
+                ->reactive()
                 ->required(),
 
             Select::make('Color de Interfaz', 'theme_palette')
@@ -127,15 +113,28 @@ class GlobalSettingFormPage extends FormPage
 
             Text::make('Símbolo de Moneda', 'currency_symbol')
                 ->default('$')
+                ->reactive()
                 ->required(),
 
             Text::make('Código de Moneda', 'currency_code')
                 ->default('MXN')
+                ->reactive()
                 ->required(),
 
             \MoonShine\UI\Fields\Number::make('Margen de Ganancia Por Defecto (%)', 'margen_defecto')
                 ->default(25)
                 ->required(),
+
+            \MoonShine\UI\Fields\Number::make('Porcentaje de Impuesto (IVA %)', 'iva_porcentaje')
+                ->default(13)
+                ->step(0.01)
+                ->reactive()
+                ->required()
+                ->hint('Tasa de impuesto aplicada temporalmente a las compras.'),
+
+            Switcher::make('¿Los costos ingresados YA incluyen IVA?', 'prices_include_tax')
+                ->default(false)
+                ->hint('Si se activa, el sistema desglosará el IVA del precio ingresado. Si se desactiva, el sistema sumará el IVA al precio.'),
 
             \MoonShine\UI\Components\Layout\Divider::make('Configuración Global App Windows'),
 

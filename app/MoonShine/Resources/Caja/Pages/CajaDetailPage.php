@@ -33,7 +33,7 @@ class CajaDetailPage extends DetailPage
                             default => 'gray'
                         }),
                     \MoonShine\UI\Fields\Number::make('Monto')
-                        ->changePreview(fn($v) => '$ ' . number_format((float)$v, 2)),
+                        ->changePreview(fn($v) => format_currency($v)),
                     \MoonShine\UI\Fields\Text::make('Descripción', 'descripcion'),
                     \MoonShine\UI\Fields\Date::make('Fecha', 'created_at')
                         ->format('d/m/Y H:i'),

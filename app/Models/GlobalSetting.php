@@ -25,16 +25,17 @@ class GlobalSetting extends Model
         'pos_block_without_shift',
         'default_opening_amount',
         'auto_open_shifts',
+        'prices_include_tax',
     ];
 
     protected static function booted()
     {
         static::saved(function ($setting) {
-            \Illuminate\Support\Facades\Cache::forget('global_settings');
+            \Illuminate\Support\Facades\Cache::forget('global_settings_v2');
         });
 
         static::deleted(function ($setting) {
-            \Illuminate\Support\Facades\Cache::forget('global_settings');
+            \Illuminate\Support\Facades\Cache::forget('global_settings_v2');
         });
     }
 }

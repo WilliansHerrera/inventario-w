@@ -7,7 +7,7 @@ if (!function_exists('get_global_setting')) {
     function get_global_setting(string $key, mixed $default = null): mixed
     {
         try {
-            $settings = Cache::rememberForever('global_settings', function () {
+            $settings = Cache::rememberForever('global_settings_v2', function () {
                 if (!\Illuminate\Support\Facades\Schema::hasTable('global_settings')) {
                     return null;
                 }
@@ -36,6 +36,6 @@ if (!function_exists('format_currency')) {
     function format_currency(mixed $amount): string
     {
         $symbol = get_currency_symbol();
-        return $symbol . ' ' . number_format((float) $amount, 2);
+        return $symbol . ' ' . number_format((float) $amount, 2, '.', '');
     }
 }
