@@ -136,7 +136,16 @@ class GlobalSettingFormPage extends FormPage
                 ->default(false)
                 ->hint('Si se activa, el sistema desglosará el IVA del precio ingresado. Si se desactiva, el sistema sumará el IVA al precio.'),
 
-            \MoonShine\UI\Components\Layout\Divider::make('Configuración Global App Windows'),
+            \MoonShine\UI\Components\Layout\Divider::make('Gestión de Cajas y POS'),
+
+            Select::make('Modo de Gestión de Caja', 'cash_management_mode')
+                ->options([
+                    'express' => 'Modo Caja Única (Simple)',
+                    'industrial' => 'Modo Multicaja (Avanzado)'
+                ])
+                ->default('express')
+                ->required()
+                ->hint('El modo Simple es para tiendas con un solo terminal. El modo Avanzado permite múltiples cajas, sucursales y auditorías.'),
 
             Switcher::make('Modo Kiosko por Defecto', 'win_kiosk_mode')
                 ->hint('Obligar a la App de Windows a iniciar en pantalla completa'),

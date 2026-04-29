@@ -58,6 +58,7 @@ class Locale extends Model
                 'auto_inicio' => (bool)($global->win_auto_inicio ?? true),
                 'version_requerida' => ($global->win_min_version ?? '1.0.0'),
                 'ruta_datos' => ($global->win_default_ruta_datos ?? 'C:\POS\Data'),
+                'cash_management_mode' => ($global->cash_management_mode ?? 'express'),
             ],
             'cajas' => $cajasArray,
         ];

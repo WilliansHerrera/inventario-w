@@ -18,8 +18,10 @@ class SetRegionalSettings
         $locale = get_global_setting('locale', config('app.locale'));
         app()->setLocale($locale);
 
-        // Compartir el símbolo de moneda en todas las vistas
-        view()->share('currency_symbol', get_currency_symbol());
+        // Compartir el símbolo de moneda en todas las vistas si el servicio está disponible
+        if (app()->bound('view')) {
+            \Illuminate\Support\Facades\View::share('currency_symbol', get_currency_symbol());
+        }
 
         return $next($request);
     }

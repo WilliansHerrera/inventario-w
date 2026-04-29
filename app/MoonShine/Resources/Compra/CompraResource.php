@@ -79,4 +79,9 @@ class CompraResource extends ModelResource
         
         return $item;
     }
+
+    public function getTitle(): string
+    {
+        return __($this->title);
+    }
 }

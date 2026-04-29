@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('compras', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('proveedor_id')->constrained('proveedors')->onDelete('cascade');
+            $table->foreignId('proveedor_id')->constrained('proveedores')->onDelete('cascade');
             $table->foreignId('locale_id')->constrained('locales')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('nro_documento')->nullable();

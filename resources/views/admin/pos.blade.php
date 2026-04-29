@@ -11,11 +11,45 @@
     }
 </script>
 
+<style>
+    /* Ocupar pantalla completa ignorando contenedores externos */
+    #pos-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 99999;
+        overflow: hidden;
+    }
+
+    /* Estandarización de Scrollbars para Firefox */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: #94a3b8 #f1f5f9;
+    }
+    
+    /* Estandarización de Scrollbars para Chrome/Edge/Safari */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+        background-color: #94a3b8;
+        border-radius: 9999px;
+        border: 2px solid #f1f5f9;
+    }
+</style>
+
 <div
+    id="pos-container"
     x-data="pos()"
     x-init="init()"
     @keydown.window="handleKey($event)"
-    class="flex flex-col w-full bg-slate-50 text-slate-800 min-h-screen lg:min-h-0 lg:h-[calc(100vh-4rem)] overflow-y-auto lg:overflow-hidden font-[Inter,sans-serif]"
+    class="flex flex-col w-full bg-slate-50 text-slate-800 h-screen overflow-hidden font-[Inter,sans-serif]"
 >
     {{-- Audio para feedback Premium --}}
     <audio x-ref="scanSound" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTtvT19vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb08="></audio>
@@ -25,16 +59,22 @@
     <div class="flex items-center gap-4 px-6 h-16 bg-slate-900 text-white shrink-0 shadow-xl z-20">
         
         {{-- Brand --}}
-        <div class="flex items-center gap-3 select-none">
-            <div class="p-2 bg-indigo-500 rounded-xl shadow-lg shadow-indigo-500/20">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" 
-                          d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                </svg>
+        <div class="flex items-center gap-3 select-none shrink-0">
+            @php
+                $paletteClass = get_global_setting('theme_palette', \MoonShine\ColorManager\Palettes\PurplePalette::class);
+                $colorName = strtolower(str_replace(['MoonShine\ColorManager\Palettes\\', 'Palette'], '', $paletteClass));
+                $logoFile = "logo-{$colorName}-small.svg";
+                if (!file_exists(public_path("vendor/moonshine/{$logoFile}"))) {
+                    $logoFile = 'logo-small.svg';
+                }
+                $logoUrl = asset("vendor/moonshine/{$logoFile}");
+            @endphp
+            <div class="w-10 h-10 shrink-0 p-1 bg-slate-800 rounded-xl shadow-lg border border-slate-700 flex items-center justify-center overflow-hidden">
+                <img src="{{ $logoUrl }}" alt="Logo" class="w-8 h-8 object-contain">
             </div>
             <div class="hidden sm:block">
                 <p class="font-black text-sm tracking-tighter uppercase italic">Inventario-W</p>
-                <p class="text-[10px] text-indigo-300 font-bold uppercase tracking-widest leading-none">Terminal POS v2.0</p>
+                <p class="text-[10px] text-indigo-300 font-bold uppercase tracking-widest leading-none">{{ __('Terminal POS v2.0') }}</p>
             </div>
         </div>
 
@@ -56,8 +96,8 @@
                 </div>
 
                 <div class="text-left">
-                    <p class="text-[9px] text-slate-400 uppercase leading-none mb-0.5" x-text="cajaId ? 'Tpv Activa' : 'Sin caja'"></p>
-                    <span class="truncate max-w-[120px]" x-text="cajaNombre || 'SELECCIONAR CAJA'"></span>
+                    <p class="text-[9px] text-slate-400 uppercase leading-none mb-0.5" x-text="cajaId ? '{{ __('Tpv Activa') }}' : '{{ __('Sin caja') }}'"></p>
+                    <span class="truncate max-w-[120px]" x-text="cajaNombre || '{{ __('SELECCIONAR CAJA') }}'"></span>
                 </div>
 
                 <svg class="w-4 h-4 text-slate-500 group-hover:text-indigo-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -72,7 +112,7 @@
                  x-transition:enter-end="opacity-100 scale-100"
                  class="absolute right-0 top-full mt-2 w-72 bg-white text-slate-800 border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden backdrop-blur-md">
                 <div class="px-5 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
-                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-500">Cajas Disponibles</span>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-500">{{ __('Cajas Disponibles') }}</span>
                 </div>
                 
                 @php $cajasDisponibles = \App\Models\Caja::with('sucursal')->get(); @endphp
@@ -85,25 +125,32 @@
                         >
                             <div class="flex flex-col gap-0.5">
                                 <span class="text-sm font-black text-slate-800 tracking-tight">{{ $caja->nombre }}</span>
-                                <span class="text-[10px] text-slate-400 font-bold uppercase">{{ $caja->sucursal?->nombre ?? 'Sin sucursal' }}</span>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase">{{ $caja->sucursal?->nombre ?? __('Sin sucursal') }}</span>
                             </div>
 
                             {{-- Estado Visual --}}
                             @if($caja->abierta)
-                                <span class="flex h-2 w-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" title="Caja Abierta"></span>
+                                <span class="flex h-2 w-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" title="{{ __('Caja Abierta') }}"></span>
                             @else
-                                <span class="flex h-2 w-2 rounded-full bg-slate-300 border border-slate-100" title="Caja Cerrada"></span>
+                                <span class="flex h-2 w-2 rounded-full bg-slate-300 border border-slate-100" title="{{ __('Caja Cerrada') }}"></span>
                             @endif
                         </button>
                     @empty
-                        <div class="px-5 py-8 text-center text-slate-400 italic text-sm">No hay cajas configuradas.</div>
+                        <div class="px-5 py-8 text-center text-slate-400 italic text-sm">{{ __('No hay cajas configuradas.') }}</div>
                     @endforelse
                 </div>
             </div>
         </div>
 
+        {{-- Botón Salir --}}
+        <a href="{{ route('moonshine.index') }}" class="w-10 h-10 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center hover:border-indigo-500 text-slate-400 hover:text-white transition-all shadow-md active:scale-95" title="{{ __('Salir al Panel') }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+        </a>
+
         {{-- User Avatar --}}
-        <div class="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-sm font-black shadow-lg shadow-indigo-600/30 ring-2 ring-indigo-500/20">
+        <div class="w-10 h-10 shrink-0 rounded-2xl bg-indigo-600 flex items-center justify-center text-sm font-black shadow-lg shadow-indigo-600/30 ring-2 ring-indigo-500/20">
             {{ substr(auth('moonshine')->user()->name ?? 'U', 0, 1) }}
         </div>
     </div>
@@ -129,7 +176,7 @@
                         x-model="query"
                         @input.debounce.200ms="search()"
                         type="text"
-                        placeholder="Buscar por NOMBRE, SKU o CÓDIGO..."
+                        placeholder="{{ __('Buscar por NOMBRE, SKU o CÓDIGO...') }}"
                         :disabled="!cajaId"
                         class="w-full pl-12 pr-6 h-12 text-sm font-bold border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 bg-white/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all placeholder:text-slate-300"
                     >
@@ -144,7 +191,7 @@
                         <circle class="opacity-10" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
                     </svg>
-                    <span class="text-xs font-black uppercase tracking-widest">Sincronizando productos...</span>
+                    <span class="text-xs font-black uppercase tracking-widest">{{ __('Sincronizando productos...') }}</span>
                 </div>
 
                 <div x-show="!loading && cajaId && products.length === 0 && query.length > 0"
@@ -152,7 +199,7 @@
                     <svg class="w-16 h-16 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    <p class="font-bold">No encontramos "<span class="text-slate-800" x-text="query"></span>"</p>
+                    <p class="font-bold">{{ __('No encontramos') }} "<span class="text-slate-800" x-text="query"></span>"</p>
                 </div>
 
                 <div x-show="!loading && products.length > 0"
@@ -224,8 +271,8 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <div>
-                            <h3 class="text-sm font-black uppercase tracking-wider text-slate-700">Mesa de Trabajo</h3>
-                            <p class="text-[10px] text-slate-400 font-bold" x-text="cart.length + ' producto(s) en carrito'"></p>
+                            <h3 class="text-sm font-black uppercase tracking-wider text-slate-700">{{ __('Mesa de Trabajo') }}</h3>
+                            <p class="text-[10px] text-slate-400 font-bold" x-text="cart.length + ' ' + '{{ __('producto(s) en carrito') }}'"></p>
                         </div>
                         <button
                             type="button"
@@ -234,7 +281,7 @@
                             class="flex items-center gap-2 px-3 py-2 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                         >
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
-                            Cerrar Caja
+                            {{ __('Cerrar Caja') }}
                         </button>
                         <button
                             type="button"
@@ -243,14 +290,14 @@
                             class="flex items-center gap-2 px-3 py-2 bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                         >
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            Gasto
+                            {{ __('Gasto') }}
                         </button>
                     </div>
                 </div>
                 <button @click="cart = []" x-show="cart.length > 0"
                     class="text-[10px] font-black text-rose-400 hover:text-rose-600 transition-colors uppercase tracking-wider flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-rose-50">
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
-                    Vaciar
+                    {{ __('Vaciar') }}
                 </button>
             </div>
 
@@ -263,7 +310,7 @@
 
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-black text-slate-800 leading-tight line-clamp-1" x-text="item.nombre"></p>
-                            <p class="text-xs font-bold text-slate-400 mt-0.5" x-text="fmt(item.precio) + ' c/u'"></p>
+                            <p class="text-xs font-bold text-slate-400 mt-0.5" x-text="fmt(item.precio) + ' ' + '{{ __('c/u') }}'"></p>
                         </div>
                         
                         <div class="flex items-center gap-1.5 px-1.5 py-1.5 bg-slate-100 rounded-xl">
@@ -274,7 +321,7 @@
 
                         <div class="text-right min-w-[90px]">
                             <p class="text-sm font-black text-slate-900 tabular-nums" x-text="fmt(item.precio * item.qty)"></p>
-                            <button @click="removeItem(idx)" class="text-[10px] font-black text-rose-400 hover:text-rose-600 mt-1 uppercase tracking-wider transition-all">✕ quitar</button>
+                            <button @click="removeItem(idx)" class="text-[10px] font-black text-rose-400 hover:text-rose-600 mt-1 uppercase tracking-wider transition-all">✕ {{ __('quitar') }}</button>
                         </div>
                     </div>
                 </template>
@@ -287,8 +334,8 @@
                         </svg>
                      </div>
                      <div class="text-center">
-                         <p class="font-black text-xs uppercase tracking-widest opacity-50">Carrito vacío</p>
-                         <p class="text-[10px] text-slate-300 mt-1">Selecciona un producto del catálogo</p>
+                         <p class="font-black text-xs uppercase tracking-widest opacity-50">{{ __('Carrito vacío') }}</p>
+                         <p class="text-[10px] text-slate-300 mt-1">{{ __('Selecciona un producto del catálogo') }}</p>
                      </div>
                 </div>
             </div>
@@ -318,22 +365,20 @@
 
             {{-- ── ZONA IZQUIERDA: todos los controles sin overflow ── --}}
             <div class="flex-1 flex items-center gap-2 px-4 py-2 min-w-0">
-
-                {{-- Método de Cobro --}}
                 <div class="flex flex-col gap-0.5 shrink-0">
-                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Método</p>
+                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">{{ __('Método') }}</p>
                     <div class="flex gap-0.5 p-0.5 bg-slate-100 rounded-xl items-center">
                         <button @click="metodo = 'efectivo'"
                                 :class="metodo === 'efectivo' ? 'bg-white shadow text-indigo-600' : 'text-slate-500 hover:bg-slate-200/50'"
                                 class="px-2.5 py-1.5 text-[10px] font-black rounded-[10px] transition-all flex items-center gap-1">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                            EFECTIVO
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2-2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                            {{ __('EFECTIVO') }}
                         </button>
                         <button @click="metodo = 'tarjeta'; recibido = ''"
                                 :class="metodo === 'tarjeta' ? 'bg-white shadow text-indigo-600' : 'text-slate-500 hover:bg-slate-200/50'"
                                 class="px-2.5 py-1.5 text-[10px] font-black rounded-[10px] transition-all flex items-center gap-1">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                            TARJETA
+                            {{ __('TARJETA') }}
                         </button>
                     </div>
                 </div>
@@ -342,7 +387,7 @@
 
                 {{-- Total a Pagar --}}
                 <div class="flex flex-col gap-0 shrink-0">
-                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Total Cobro</p>
+                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">{{ __('Total Cobro') }}</p>
                     <span class="text-2xl font-black text-indigo-600 font-mono tracking-tighter leading-none" x-text="fmt(total())"></span>
                 </div>
 
@@ -354,7 +399,7 @@
 
                         {{-- Bloque efectivo: ancho fijo para que los billetes no desborden --}}
                         <div class="flex flex-col gap-1 shrink-0 w-36">
-                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Efectivo Recibido</p>
+                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">{{ __('Efectivo Recibido') }}</p>
                             {{-- Input --}}
                             <div class="relative">
                                 <span class="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">{{ get_currency_symbol() }}</span>
@@ -387,13 +432,13 @@
                             {{-- Falta --}}
                             <span x-show="vueltoNegativo()"
                                 class="text-[9px] font-black text-rose-400 leading-none"
-                                x-text="'Falta ' + fmt(total() - (parseFloat(recibido)||0))"
+                                x-text="'{{ __('Falta') }} ' + fmt(total() - (parseFloat(recibido)||0))"
                             ></span>
                         </div>
 
                         {{-- Desglose del Vuelto Assistant --}}
                         <div x-show="vuelto() > 0" class="flex flex-col gap-1 ml-2 max-w-[150px]">
-                            <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">Entregar:</p>
+                            <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">{{ __('Entregar:') }}</p>
                             <div class="flex flex-wrap gap-1">
                                 <template x-for="item in getVueltoBreakdown(vuelto())" :key="item.label">
                                     <span :class="item.isCoin ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-indigo-50 text-indigo-600 border-indigo-100'"
@@ -419,8 +464,8 @@
                 >
                     <div class="absolute inset-0 bg-indigo-400/0 group-hover:bg-indigo-400/10 transition-all rounded-2xl"></div>
                     <span x-show="!processing" class="flex items-center gap-2 relative">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                        COBRAR
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2-2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        {{ __('COBRAR') }}
                         <span class="text-[10px] opacity-50 border border-white/20 px-1.5 py-0.5 rounded-md font-bold">F5</span>
                     </span>
                     <div x-show="processing" class="flex items-center gap-2 relative">
@@ -428,7 +473,7 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
                         </svg>
-                        <span class="text-xs">PROCESANDO...</span>
+                        <span class="text-xs">{{ __('PROCESANDO...') }}</span>
                     </div>
                 </button>
             </div>
@@ -460,7 +505,7 @@
             </div>
             
             <div class="space-y-1">
-                <h2 class="text-xl font-black text-slate-900 tracking-tighter">¡Venta Realizada!</h2>
+                <h2 class="text-xl font-black text-slate-900 tracking-tighter">{{ __('¡Venta Realizada!') }}</h2>
                 <div class="inline-flex px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-[9px] font-black uppercase tracking-widest">
                     Ticket #<span x-text="String(successData?.id ?? 0).padStart(6, '0')"></span>
                 </div>
@@ -468,7 +513,7 @@
 
             <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
                 <div>
-                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Cobrado</p>
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{{ __('Total Cobrado') }}</p>
                     <p class="text-3xl font-black text-slate-900 tabular-nums" x-text="fmt(successData?.total ?? 0)"></p>
                 </div>
                 {{-- Vuelto en el modal (solo si aplica) --}}
@@ -476,18 +521,18 @@
                     <div class="space-y-3">
                         <div class="flex items-center justify-between pt-2 border-t border-slate-200">
                             <div class="text-left">
-                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Recibido</p>
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ __('Recibido') }}</p>
                                 <p class="text-base font-black text-slate-600 tabular-nums" x-text="fmt(successData?.recibido ?? 0)"></p>
                             </div>
                             <div class="text-right">
-                                <p class="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Vuelto</p>
+                                <p class="text-[9px] font-black text-emerald-500 uppercase tracking-widest">{{ __('Vuelto') }}</p>
                                 <p class="text-xl font-black text-emerald-500 tabular-nums" x-text="fmt(successData?.vuelto ?? 0)"></p>
                             </div>
                         </div>
                         
                         {{-- Desglose en Éxito --}}
                         <div class="pt-2 border-t border-slate-100">
-                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2 text-left">Desglose de cambio:</p>
+                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2 text-left">{{ __('Desglose de cambio:') }}</p>
                             <div class="grid grid-cols-2 gap-1.5">
                                 <template x-for="item in getVueltoBreakdown(successData?.vuelto)" :key="item.label">
                                     <div :class="item.isCoin ? 'bg-emerald-50 border-emerald-100' : 'bg-indigo-50 border-indigo-100'"
@@ -516,7 +561,7 @@
                     type="button"
                     @click="closeSuccess()"
                     class="w-full py-2.5 bg-white border border-slate-200 rounded-[15px] text-xs font-black text-slate-500 hover:bg-slate-50 transition-all"
-                >Nueva Venta</button>
+                >{{ __('Nueva Venta') }}</button>
             </div>
         </div>
     </div>
@@ -538,8 +583,8 @@
                     <svg x-show="auditType === 'cierre'" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 10h6m-6 4h6"/></svg>
                 </div>
                 <div>
-                    <h3 class="font-black text-slate-800 uppercase tracking-tight" x-text="auditType === 'apertura' ? 'Arqueo de Apertura' : 'Cerrar Jornada (Arqueo)'"></h3>
-                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest" x-text="auditType === 'apertura' ? 'Ingresa el efectivo inicial' : 'Ingresa el efectivo total contado'"></p>
+                    <h3 class="font-black text-slate-800 uppercase tracking-tight" x-text="auditType === 'apertura' ? '{{ __('Arqueo de Apertura') }}' : '{{ __('Cerrar Jornada (Arqueo)') }}'"></h3>
+                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest" x-text="auditType === 'apertura' ? '{{ __('Ingresa el efectivo inicial') }}' : '{{ __('Ingresa el efectivo total contado') }}'"></p>
                 </div>
             </div>
 
@@ -549,33 +594,33 @@
                 {{-- Shift Summary (Only for Cierre) --}}
                 <div x-show="auditType === 'cierre'" class="mb-6">
                     <div x-show="isSummaryLoading" class="flex flex-col items-center justify-center py-4 text-slate-400 gap-2 animate-pulse bg-slate-50 rounded-2xl border border-slate-100 italic">
-                        <span class="text-[9px] font-black uppercase tracking-widest">Calculando balances...</span>
+                        <span class="text-[9px] font-black uppercase tracking-widest">{{ __('Calculando balances...') }}</span>
                     </div>
                     
                     <div x-show="!isSummaryLoading" class="p-4 bg-slate-900 rounded-2xl shadow-xl border border-slate-800">
-                        <h4 class="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-3 border-b border-white/5 pb-2">Estado de Caja Actual</h4>
+                        <h4 class="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-3 border-b border-white/5 pb-2">{{ __('Estado de Caja Actual') }}</h4>
                         <div class="space-y-2 text-xs">
                             <div class="flex justify-between items-center text-slate-300">
-                                <span class="font-medium opacity-60">Ventas (+)</span>
+                                <span class="font-medium opacity-60">{{ __('Ventas (+)') }}</span>
                                 <span class="font-black text-emerald-400" x-text="fmt(summary.ventas)"></span>
                             </div>
                             <div class="flex justify-between items-center text-slate-300">
-                                <span class="font-medium opacity-60">Gastos (-)</span>
+                                <span class="font-medium opacity-60">{{ __('Gastos (-)') }}</span>
                                 <span class="font-black text-rose-400" x-text="'- ' + fmt(summary.egresos)"></span>
                             </div>
                             <div class="flex justify-between items-center text-slate-300">
-                                <span class="font-medium opacity-60">Fondo Inicial</span>
+                                <span class="font-medium opacity-60">{{ __('Fondo Inicial') }}</span>
                                 <span class="font-bold opacity-80" x-text="fmt(summary.apertura)"></span>
                             </div>
                             <div class="pt-2 mt-2 border-t border-white/10 flex justify-between items-center">
-                                <span class="text-[9px] font-black text-indigo-400 uppercase">Debes Entregar:</span>
+                                <span class="text-[9px] font-black text-indigo-400 uppercase">{{ __('Debes Entregar:') }}</span>
                                 <span class="text-lg font-black text-white font-mono tracking-tighter" x-text="fmt(summary.esperado)"></span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Efectivo Físico en Caja</label>
+                <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{{ __('Efectivo Físico en Caja') }}</label>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <span class="text-slate-400 font-black text-lg">{{ get_currency_symbol() }}</span>
@@ -593,8 +638,8 @@
                 {{-- Calculadora de Denominaciones --}}
                 <div class="mt-6 border-t border-slate-100 pt-6">
                     <div class="flex items-center justify-between mb-4">
-                        <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Calculadora de Arqueo</span>
-                        <button @click="billCounts = {}; updateAuditFromCalculator()" class="text-[9px] font-black text-rose-400 uppercase tracking-widest hover:text-rose-600 transition-colors">Limpiar</button>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ __('Calculadora de Arqueo') }}</span>
+                        <button @click="billCounts = {}; updateAuditFromCalculator()" class="text-[9px] font-black text-rose-400 uppercase tracking-widest hover:text-rose-600 transition-colors">{{ __('Limpiar') }}</button>
                     </div>
 
                     <div class="space-y-6">
@@ -602,7 +647,7 @@
                         <div>
                             <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2-2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                                Billetes
+                                {{ __('Billetes') }}
                             </p>
                             <div class="grid grid-cols-2 gap-x-4 gap-y-3">
                                 <template x-for="d in denominations.filter(v => v > 1)" :key="d">
@@ -632,7 +677,7 @@
                         <div>
                             <p class="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                Monedas
+                                {{ __('Monedas') }}
                             </p>
                             <div class="grid grid-cols-2 gap-x-4 gap-y-3">
                                 <template x-for="d in denominations.filter(v => v <= 1)" :key="d">
@@ -661,11 +706,11 @@
                 </div>
                 
                 <p x-show="auditType === 'apertura'" class="mt-4 text-[10px] text-slate-400 font-bold leading-relaxed px-2">
-                    * El sistema comparará este monto con el fondo asignado de 
+                    * {{ __('El sistema comparará este monto con el fondo asignado de') }} 
                     <span class="text-indigo-500">{{ format_currency(get_global_setting('default_opening_amount', 50)) }}</span>.
                 </p>
                 <p x-show="auditType === 'cierre'" class="mt-4 text-[10px] text-slate-400 font-bold leading-relaxed px-2">
-                    * Asegúrate de que el total coincida con el dinero físico en gaveta. Las diferencias serán registradas automáticamente.
+                    * {{ __('Asegúrate de que el total coincida con el dinero físico en gaveta. Las diferencias serán registradas automáticamente.') }}
                 </p>
             </div>
 
@@ -673,14 +718,14 @@
             <div class="p-6 bg-slate-50 border-t border-slate-100 flex items-center gap-3 shrink-0">
                 <button @click="showAuditModal = false" 
                         class="flex-1 px-4 py-3 text-slate-500 font-black text-xs uppercase tracking-widest hover:text-slate-800 transition-colors">
-                    Cancelar
+                    {{ __('Cancelar') }}
                 </button>
                 <button @click="submitAudit()" 
                         :disabled="isAuditLoading"
                         :class="auditType === 'apertura' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-rose-600 hover:bg-rose-700'"
                         class="flex-[2] py-4 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2">
                     <svg x-show="isAuditLoading" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
-                    <span x-text="isAuditLoading ? 'PROCESANDO...' : (auditType === 'apertura' ? 'INICIAR JORNADA' : 'CERRAR Y AUDITAR')"></span>
+                    <span x-text="isAuditLoading ? '{{ __('PROCESANDO...') }}' : (auditType === 'apertura' ? '{{ __('INICIAR JORNADA') }}' : '{{ __('CERRAR Y AUDITAR') }}')"></span>
                 </button>
             </div>
         </div>
@@ -706,8 +751,8 @@
              x-transition:enter-end="scale-100 translate-y-0"
         >
             <div class="px-8 py-6 bg-gradient-to-br from-amber-500 to-amber-600 text-white relative">
-                <h3 class="text-xl font-black uppercase tracking-tight">Registrar Gasto</h3>
-                <p class="text-sm text-amber-100 font-medium">Extraer dinero de la caja activa</p>
+                <h3 class="text-xl font-black uppercase tracking-tight">{{ __('Registrar Gasto') }}</h3>
+                <p class="text-sm text-amber-100 font-medium">{{ __('Extraer dinero de la caja activa') }}</p>
                 <button type="button" @click="showGastoModal = false" class="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
@@ -715,7 +760,7 @@
             
             <div class="p-8 space-y-6">
                 <div class="space-y-2">
-                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-500">Monto del Gasto</label>
+                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-500">{{ __('Monto del Gasto') }}</label>
                     <div class="relative">
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black">{{ get_currency_symbol() }}</span>
                         <input 
@@ -731,11 +776,11 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-500">Descripción / Motivo</label>
+                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-500">{{ __('Descripción / Motivo') }}</label>
                     <textarea 
                         x-model="gastoDescripcion"
                         class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-amber-500 focus:ring-0 transition-all font-medium text-slate-700 min-h-[100px] resize-none"
-                        placeholder="Ej: Compra de artículos de limpieza..."
+                        placeholder="{{ __('Ej: Compra de artículos de limpieza...') }}"
                     ></textarea>
                 </div>
 
@@ -747,14 +792,14 @@
                         @click="showGastoModal = false; gastoMonto = 0; gastoDescripcion = ''"
                         class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-200 transition-all"
                     >
-                        Cancelar
+                        {{ __('Cancelar') }}
                     </button>
                     <button 
                         type="button"
                         @click="submitGasto()"
                         class="flex-[2] py-4 bg-amber-500 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-amber-600 shadow-lg shadow-amber-500/30 transition-all"
                     >
-                        Registrar Gasto
+                        {{ __('Registrar Gasto') }}
                     </button>
                 </div>
             </div>
@@ -764,12 +809,17 @@
 </div>
 
 <script>
+@php
+    $mode = get_global_setting('cash_management_mode', 'express');
+    $firstCaja = \App\Models\Caja::first();
+@endphp
+
 function pos() {
     return {
         baseUrl:     '{{ asset("/") }}',
-        cajaId:      null,
-        cajaLocaleId: null,
-        cajaNombre:  '',
+        cajaId:      {!! ($mode === 'express' && $firstCaja) ? $firstCaja->id : 'null' !!},
+        cajaLocaleId: {!! ($mode === 'express' && $firstCaja) ? ($firstCaja->locale_id ?? 'null') : 'null' !!},
+        cajaNombre:  '{!! ($mode === 'express' && $firstCaja) ? addslashes($firstCaja->nombre) : "" !!}',
         query:       '',
         products:    [],
         cart:        [],
@@ -859,6 +909,10 @@ function pos() {
             this.$nextTick(() => {
                 if (this.$refs.searchInput) this.$refs.searchInput.focus();
             });
+
+            if (this.cajaId) {
+                this.search();
+            }
         },
 
         selectCaja(id, nombre, localeId, abierta = true, autoOpen = false) {
@@ -936,10 +990,10 @@ function pos() {
                 if (res.ok && data.success) {
                     this.search(); // Habilitar búsqueda de productos
                 } else {
-                    this.flashError(data.error || 'No se pudo abrir la caja automáticamente.');
+                    this.flashError(data.error || '{{ __('No se pudo abrir la caja automáticamente.') }}');
                 }
             } catch (e) {
-                this.flashError('Error al intentar abrir la caja automáticamente.');
+                this.flashError('{{ __('Error al intentar abrir la caja automáticamente.') }}');
             }
         },
 
@@ -973,7 +1027,7 @@ function pos() {
             const existing = this.cart.find(i => i.id === p.id);
             if (existing) {
                 if (existing.qty < p.stock) existing.qty++;
-                else this.flashError(`Stock máximo alcanzado (${p.stock})`);
+                else this.flashError('{{ __('Stock máximo alcanzado') }} (' + p.stock + ')');
             } else {
                 this.cart.push({ id: p.id, nombre: p.nombre, precio: p.precio, qty: 1, stock: p.stock });
             }
@@ -984,7 +1038,7 @@ function pos() {
 
         increaseQty(idx) {
             if (this.cart[idx].qty < this.cart[idx].stock) this.cart[idx].qty++;
-            else this.flashError('Inventario insuficiente.');
+            else this.flashError('{{ __('Inventario insuficiente.') }}');
         },
 
         decreaseQty(idx) {
@@ -1022,7 +1076,7 @@ function pos() {
                 const data = await res.json();
                 
                 if (res.status === 422) {
-                    const errors = data.errors ? Object.values(data.errors).flat().join(' | ') : (data.error || 'Validación fallida.');
+                    const errors = data.errors ? Object.values(data.errors).flat().join(' | ') : (data.error || '{{ __('Validación fallida.') }}');
                     this.flashError(errors);
                     return;
                 }
@@ -1044,10 +1098,10 @@ function pos() {
                     this.query = '';
                     this.products = [];
                 } else {
-                    this.flashError(data.error || 'Error en el servidor.');
+                    this.flashError(data.error || '{{ __('Error en el servidor.') }}');
                 }
             } catch (e) {
-                this.flashError('Error de red crítico.');
+                this.flashError('{{ __('Error de red crítico.') }}');
             } finally {
                 this.processing = false;
             }
@@ -1056,7 +1110,7 @@ function pos() {
         async submitGasto() {
             if (!this.cajaId) return;
             if (this.gastoMonto <= 0) {
-                this.errorMsg = 'El monto del gasto debe ser mayor a 0.';
+                this.errorMsg = '{{ __('El monto del gasto debe ser mayor a 0.') }}';
                 return;
             }
 
@@ -1083,13 +1137,13 @@ function pos() {
                     this.gastoMonto = 0;
                     this.gastoDescripcion = '';
                     // Notificación local si existe
-                    alert('Gasto registrado con éxito.');
+                    alert('{{ __('Gasto registrado con éxito.') }}');
                 } else {
-                    this.errorMsg = data.error || 'Error al registrar el gasto.';
+                    this.errorMsg = data.error || '{{ __('Error al registrar el gasto.') }}';
                 }
             } catch (error) {
                 console.error('Error:', error);
-                this.errorMsg = 'Error de conexión al registrar el gasto.';
+                this.errorMsg = '{{ __('Error de conexión al registrar el gasto.') }}';
             }
         },
 
@@ -1175,11 +1229,11 @@ function pos() {
                         location.reload(); // Resetear estado tras cierre
                     }
                 } else {
-                    const errMsg = data.error || data.message || 'Error al procesar la operación de caja.';
+                    const errMsg = data.error || data.message || '{{ __('Error al procesar la operación de caja.') }}';
                     this.flashError(errMsg);
                 }
             } catch (e) {
-                this.flashError('Error de conexión al procesar la auditoría.');
+                this.flashError('{{ __('Error de conexión al procesar la auditoría.') }}');
             } finally {
                 this.isAuditLoading = false;
             }

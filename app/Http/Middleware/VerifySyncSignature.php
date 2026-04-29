@@ -37,13 +37,25 @@ class VerifySyncSignature
         }
 
         // 2. Buscar Sucursal/Locale
-        $locale = Locale::find($id);
+        $locale = null;
+        if ($id) {
+            $locale = Locale::find($id);
+        }
+        
+        if (!$locale) {
+            $token = $request->header('X-Sync-Token');
+            if ($token) {
+                $locale = Locale::where('sync_token', $token)->first();
+            }
+        }
+
         if (!$locale || empty($locale->sync_token)) {
             return response()->json([
                 'success' => false,
                 'error' => 'Seguridad: Sucursal no identificada o sin token de seguridad configurado.'
             ], 401);
         }
+
 
         // 3. Reconstruir mensaje para verificar firma
         // Formato: timestamp + method + path + body

@@ -21,8 +21,8 @@ use MoonShine\Laravel\Pages\LoginPage;
 use MoonShine\Laravel\Pages\ProfilePage;
 
 return [
-    'title' => env('MOONSHINE_TITLE', 'MoonShine'),
-    'logo' => '/vendor/moonshine/logo-small.svg',
+    'title' => env('MOONSHINE_TITLE', 'Inventario-W'),
+    'logo' => '/vendor/moonshine/logo.svg',
     'logo_small' => '/vendor/moonshine/logo-small.svg',
 
 
@@ -91,7 +91,7 @@ return [
     'pages' => [
         'dashboard' => App\MoonShine\Pages\Dashboard::class,
         'profile' => ProfilePage::class,
-        'login' => LoginPage::class,
+        'login' => \App\MoonShine\Pages\CustomLoginPage::class,
         'error' => ErrorPage::class,
     ],
 
@@ -99,6 +99,9 @@ return [
     'locale' => 'es',
     'locale_key' => ChangeLocale::KEY,
     'locales' => [
-        'en', 'es', 'pt', 'fr'
+        'es' => 'Español',
+        'en' => 'English',
+        'pt' => 'Português',
+        'fr' => 'Français'
     ],
 ];

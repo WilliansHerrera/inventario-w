@@ -6,6 +6,10 @@ use App\Http\Controllers\Admin\POSController;
 // Alias para evitar el error 'Route [login] not defined'
 Route::get('/login-alias', fn() => redirect('/login'))->name('login');
 
+// Rutas de Identidad Visual Dinámica (Branding)
+Route::get('/branding/logo.svg', [\App\Http\Controllers\Admin\BrandingController::class, 'logo'])->name('branding.logo');
+Route::get('/branding/logo-small.svg', [\App\Http\Controllers\Admin\BrandingController::class, 'logoSmall'])->name('branding.logo-small');
+
 Route::get('/pos-download', function() {
     $path = public_path('downloads/POS-Scanner-Setup.exe');
     if (file_exists($path)) {

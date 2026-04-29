@@ -35,4 +35,9 @@ class VentaDetalleResource extends ModelResource
             VentaDetalleDetailPage::class,
         ];
     }
+
+    public function getTitle(): string
+    {
+        return __($this->title);
+    }
 }

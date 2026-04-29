@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Impresión de Etiquetas Premium</title>
+    <title>{{ __('Impresión de Etiquetas Premium') }}</title>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
@@ -224,23 +224,23 @@
         <div class="dashboard-content">
             <div class="stats">
                 <div class="stat-item">
-                    <span class="stat-label">Productos</span>
+                    <span class="stat-label">{{ __('Productos') }}</span>
                     <span class="stat-value" id="stats-products">{{ $productos->count() }}</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Total Etiquetas</span>
+                    <span class="stat-label">{{ __('Total Etiquetas') }}</span>
                     <span class="stat-value text-primary" id="stats-total">0</span>
                 </div>
             </div>
 
             <div style="flex: 1; text-align: center;">
                 <h1 style="margin:0; font-size: 1.2rem; font-weight: 800; color: var(--primary);">PRINT DASHBOARD</h1>
-                <p style="margin:0; font-size: 0.8rem; color: #64748b;">Ajusta las cantidades y presiona imprimir</p>
+                <p style="margin:0; font-size: 0.8rem; color: #64748b;">{{ __('Ajusta las cantidades y presiona imprimir') }}</p>
             </div>
 
             <button onclick="window.print()" class="btn-print">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2m-2 4H8a2 2 0 01-2-2v-3h12v3a2 2 0 01-2 2z"></path></svg>
-                IMPRIMIR AHORA
+                {{ __('IMPRIMIR AHORA') }}
             </button>
         </div>
     </header>
@@ -251,7 +251,7 @@
             <div class="vignette" data-product-id="{{ $producto->id }}">
                 <!-- On screen controls -->
                 <div class="vignette-controls">
-                    <span style="font-size: 10px; color: #94a3b8">Copias</span>
+                    <span style="font-size: 10px; color: #94a3b8">{{ __('Copias') }}</span>
                     <input type="number" 
                            class="qty-input product-qty" 
                            data-id="{{ $producto->id }}" 
@@ -317,7 +317,7 @@
                 url.searchParams.set('quantity', qty);
                 window.location.href = url.toString();
             } else {
-                alert("Para imprimir múltiples cantidades de diferentes productos, ajusta las selecciones en el catálogo. ¡Pronto añadiremos edición en vivo aquí!");
+                alert('{{ __('Para imprimir múltiples cantidades de diferentes productos, ajusta las selecciones en el catálogo. ¡Pronto añadiremos edición en vivo aquí!') }}');
             }
         }
 

@@ -26,12 +26,27 @@ class GlobalSetting extends Model
         'default_opening_amount',
         'auto_open_shifts',
         'prices_include_tax',
+        'iva_porcentaje',
+        'cash_management_mode',
     ];
 
     protected static function booted()
     {
         static::saved(function ($setting) {
             \Illuminate\Support\Facades\Cache::forget('global_settings_v2');
+
+            if ($setting->cash_management_mode === 'express') {
+                $locales = \App\Models\Locale::all();
+                foreach ($locales as $locale) {
+                    if ($locale->cajas()->count() === 0) {
+                        $locale->cajas()->create([
+                            'nombre' => 'Caja Única',
+                            'saldo' => 0,
+                            'abierta' => true, // En Express, dejamos la caja operativa por defecto
+                        ]);
+                    }
+                }
+            }
         });
 
         static::deleted(function ($setting) {

@@ -1,0 +1,10 @@
+<svg width="500" height="500" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradretro" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d97706" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+  </defs>
+  <circle cx="250" cy="250" r="250" fill="url(#bgGradretro)" />
+  <path d="M100 150 L180 370 L250 220 L320 370 L400 150" stroke="#ffffff" stroke-width="52" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

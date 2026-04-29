@@ -3,11 +3,11 @@
 
 [Setup]
 AppName=Inventario-W Server
-AppVersion=2.1.0
+AppVersion=2.2.0
 DefaultDirName=C:\Inventario-W
 DefaultGroupName=Inventario-W
 OutputDir=.
-OutputBaseFilename=Inventario-W-V2.1.0
+OutputBaseFilename=Inventario-W-V2.2.0
 Compression=lzma
 ; Imagenes de marca (Inno Setup solo soporta .BMP, comentar estos si dan error de Bitmap)
 ; WizardImageFile=dist\pos_inventory_icon_1775924858045.png

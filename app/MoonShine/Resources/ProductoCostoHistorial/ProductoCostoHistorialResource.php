@@ -39,4 +39,9 @@ class ProductoCostoHistorialResource extends ModelResource
             ProductoCostoHistorialDetailPage::class,
         ];
     }
+
+    public function getTitle(): string
+    {
+        return __($this->title);
+    }
 }

@@ -40,15 +40,24 @@ class CajaResource extends ModelResource
     {
         return [
             \MoonShine\UI\Fields\ID::make()->sortable(),
-            \MoonShine\UI\Fields\Text::make('Nombre'),
-            \MoonShine\UI\Fields\Relationships\BelongsTo::make('Sucursal', 'sucursal', resource: \App\MoonShine\Resources\Locale\LocaleResource::class),
-            \MoonShine\UI\Fields\Number::make('Saldo Actual', 'saldo')->sortable()->badge('success'),
-            \MoonShine\UI\Fields\Text::make('Estado', 'abierta')
+            \MoonShine\UI\Fields\Text::make(__('Nombre')),
+            \MoonShine\UI\Fields\Relationships\BelongsTo::make(__('Sucursal'), 'sucursal', resource: \App\MoonShine\Resources\Locale\LocaleResource::class),
+            \MoonShine\UI\Fields\Number::make(__('Saldo Actual'), 'saldo')->sortable()->badge('success'),
+            \MoonShine\UI\Fields\Text::make(__('Efectivo en Turno'))
+                ->changePreview(function($value, Caja $item) {
+                    if (!$item->abierta) {
+                        return '-';
+                    }
+                    $summary = $item->getShiftSummary();
+                    return format_currency($summary['esperado'] ?? 0);
+                }),
+            \MoonShine\UI\Fields\Text::make(__('Estado'), 'abierta')
+
                 ->changePreview(fn($value) => $value 
-                    ? \MoonShine\UI\Components\Badge::make('Jornada Activa', 'success')
-                    : \MoonShine\UI\Components\Badge::make('Caja Cerrada', 'gray')
+                    ? \MoonShine\UI\Components\Badge::make(__('Jornada Activa'), 'success')
+                    : \MoonShine\UI\Components\Badge::make(__('Caja Cerrada'), 'gray')
                 ),
-            \MoonShine\UI\Fields\Switcher::make('Inc. Apertura Global', 'incluir_en_apertura_global')
+            \MoonShine\UI\Fields\Switcher::make(__('Inc. Apertura Global'), 'incluir_en_apertura_global')
                 ->default(true),
         ];
     }
@@ -70,16 +79,16 @@ class CajaResource extends ModelResource
     {
         return [
             // BOTÓN: ABRIR TURNO
-            ActionButton::make('Abrir Jornada', fn(Caja $item) => route('admin.caja.abrir', $item))
+            ActionButton::make(__('Abrir Jornada'), fn(Caja $item) => route('admin.caja.abrir', $item))
                 ->canSee(fn(Caja $item) => !$item->abierta)
                 ->success()
                 ->icon('play')
                 ->withConfirm(
-                    'Arqueo de Apertura',
-                    'El sistema tiene asignado un fondo inicial de ' . format_currency(get_global_setting('default_opening_amount', 50)) . '. Por favor, introduce el efectivo REAL que tienes en caja para abrir.',
-                    'Iniciar Jornada Auditada',
+                    __('Arqueo de Apertura'),
+                    __('El sistema tiene asignado un fondo inicial de ') . format_currency(get_global_setting('default_opening_amount', 50)) . __(' Por favor, introduce el efectivo REAL que tienes en caja para abrir.'),
+                    __('Iniciar Jornada Auditada'),
                     fn() => [
-                        \MoonShine\UI\Fields\Number::make('Efectivo Físico Contado', 'monto_apertura')
+                        \MoonShine\UI\Fields\Number::make(__('Efectivo Físico Contado'), 'monto_apertura')
                             ->default(get_global_setting('default_opening_amount', 50))
                             ->required(),
                         \MoonShine\UI\Fields\Hidden::make('monto_esperado')
@@ -88,67 +97,72 @@ class CajaResource extends ModelResource
                 ),
 
             // BOTÓN: CERRAR TURNO (ARCHEO)
-            ActionButton::make('Cerrar Jornada (Arqueo)', fn(Caja $item) => route('admin.caja.cerrar', $item))
+            ActionButton::make(__('Cerrar Jornada (Arqueo)'), fn(Caja $item) => route('admin.caja.cerrar', $item))
                 ->canSee(fn(Caja $item) => $item->abierta)
                 ->warning()
                 ->icon('stop')
                 ->withConfirm(
-                    'Cerrar Jornada',
+                    fn(Caja $item) => __('Cerrar Jornada - Saldo Esperado: ') . format_currency($item->getShiftSummary()['esperado'] ?? 0),
+
                     function(Caja $item) {
                         $summary = $item->getShiftSummary();
-                        $ventas = format_currency($summary['ventas']);
-                        $egresos = format_currency($summary['egresos']);
-                        $fondo = format_currency($summary['apertura']);
-                        $esperado = format_currency($summary['esperado']);
+                        $ventas = format_currency($summary['ventas'] ?? 0);
+                        $egresos = format_currency($summary['egresos'] ?? 0);
+                        $fondo = format_currency($summary['apertura'] ?? 0);
+                        $esperado = format_currency($summary['esperado'] ?? 0);
                         
                         return "
-                            <div class='mb-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm'>
+                            <div class='mb-4 p-4 bg-slate-900 rounded-xl border border-slate-800 shadow-sm'>
                                 <h4 class='text-xs font-bold uppercase tracking-wider text-slate-500 mb-3'>Estado de Caja Actual</h4>
                                 <div class='space-y-2 text-sm'>
                                     <div class='flex justify-between items-center'>
-                                        <span class='text-slate-600 dark:text-slate-400'>Ventas Registradas:</span>
-                                        <span class='font-bold text-emerald-600'>+ $ventas</span>
+                                        <span class='text-slate-400'>Ventas Registradas:</span>
+                                        <span class='font-bold text-emerald-400'>+ $ventas</span>
                                     </div>
                                     <div class='flex justify-between items-center'>
-                                        <span class='text-slate-600 dark:text-slate-400'>Egresos/Gastos:</span>
-                                        <span class='font-bold text-rose-600'>- $egresos</span>
+                                        <span class='text-slate-400'>Egresos/Gastos:</span>
+                                        <span class='font-bold text-rose-400'>- $egresos</span>
                                     </div>
                                     <div class='flex justify-between items-center'>
-                                        <span class='text-slate-600 dark:text-slate-400'>Fondo de Apertura:</span>
-                                        <span class='font-medium text-slate-700 dark:text-slate-300'>$fondo</span>
+                                        <span class='text-slate-400'>Fondo de Apertura:</span>
+                                        <span class='font-medium text-slate-300'>$fondo</span>
                                     </div>
-                                    <div class='pt-2 mt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center'>
-                                        <span class='font-bold text-slate-800 dark:text-slate-100 uppercase text-xs'>Total Esperado en Caja:</span>
-                                        <span class='text-lg font-black text-primary'>$esperado</span>
+                                    <div class='pt-2 mt-2 border-t border-slate-800 flex justify-between items-center'>
+                                        <span class='font-bold text-slate-100 uppercase text-xs'>Total Esperado en Caja:</span>
+                                        <span class='text-lg font-black text-green-500'>$esperado</span>
                                     </div>
                                 </div>
                             </div>
-                            <p class='text-sm text-slate-500 mb-2'>Por favor, cuenta el efectivo físico y escribe el monto total abajo:</p>
+                            <p class='text-sm text-slate-400 mb-2'>Por favor, cuenta el efectivo físico y escribe el monto total abajo:</p>
                         ";
                     },
                     'Cerrar y Auditar',
-                    fn() => [
+
+                    fn(Caja $item) => [
                         \MoonShine\UI\Fields\Number::make('Efectivo Físico Contado', 'monto_real')
+                            ->default($item->getShiftSummary()['esperado'] ?? 0)
+                            ->hint('El sistema calcula que deberías tener: ' . format_currency($item->getShiftSummary()['esperado'] ?? 0))
                             ->required()
                     ]
                 ),
 
+
             // BOTÓN: REGISTRAR EGRESO (GASTO)
-            ActionButton::make('Registrar Gasto', fn(Caja $item) => route('admin.caja.egreso', $item))
+            ActionButton::make(__('Registrar Gasto'), fn(Caja $item) => route('admin.caja.egreso', $item))
                 ->primary()
                 ->icon('minus-circle')
                 ->withConfirm(
-                    'Registrar Gasto de Caja',
-                    'Registra una salida de dinero para proveedores, servicios u otros conceptos.',
-                    'Guardar Egreso',
+                    __('Registrar Gasto de Caja'),
+                    __('Registra una salida de dinero para proveedores, servicios u otros conceptos.'),
+                    __('Guardar Egreso'),
                     fn() => [
-                        \MoonShine\UI\Fields\Number::make('Monto', 'monto')
+                        \MoonShine\UI\Fields\Number::make(__('Monto'), 'monto')
                             ->required(),
-                        \MoonShine\UI\Fields\Select::make('Categoría', 'categoria_id')
+                        \MoonShine\UI\Fields\Select::make(__('Categoría'), 'categoria_id')
                             ->options(\App\Models\CajaMovimientoCategoria::where('tipo', 'egreso')->pluck('nombre', 'id')->toArray())
                             ->nullable(),
-                        \MoonShine\UI\Fields\Text::make('Descripción / Otro Concepto', 'descripcion_libre')
-                            ->placeholder('Ej: Pago de luz, limpieza, etc.')
+                        \MoonShine\UI\Fields\Text::make(__('Descripción / Otro Concepto'), 'descripcion_libre')
+                            ->placeholder(__('Ej: Pago de luz, limpieza, etc.'))
                     ]
                 ),
         ];
@@ -160,10 +174,15 @@ class CajaResource extends ModelResource
     public function actions(): array
     {
         return [
-            ActionButton::make('Iniciar Jornada Única (Toda la Tienda)', route('admin.caja.iniciar-dia'))
+            ActionButton::make(__('Iniciar Jornada Única (Toda la Tienda)'), route('admin.caja.iniciar-dia'))
                 ->primary()
                 ->icon('sun')
                 ->showInLine(),
         ];
+    }
+
+    public function getTitle(): string
+    {
+        return __($this->title);
     }
 }

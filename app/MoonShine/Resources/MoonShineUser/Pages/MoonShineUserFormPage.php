@@ -62,6 +62,11 @@ final class MoonShineUserFormPage extends FormPage
                                 ->required(),
                         ]),
 
+                        Text::make(__('PIN Punto de Venta (4 dígitos)'), 'pos_pin')
+                            ->nullable()
+                            ->customAttributes(['maxlength' => 4]),
+
+
                         Image::make(__('moonshine::ui.resource.avatar'), 'avatar')
                             ->disk(moonshineConfig()->getDisk())
                             ->dir('moonshine_users')
@@ -93,7 +98,9 @@ final class MoonShineUserFormPage extends FormPage
         return [
             'name' => 'required',
             'moonshine_user_role_id' => 'required',
+            'pos_pin' => ['nullable', 'string', 'size:4'],
             'email' => [
+
                 'sometimes',
                 'bail',
                 'required',

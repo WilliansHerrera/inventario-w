@@ -38,6 +38,20 @@ final class MoonShineLayout extends AppLayout
         return get_global_setting('theme_palette', PurplePalette::class);
     }
 
+    protected function getLogo(bool $small = false): string
+    {
+        $paletteClass = get_global_setting('theme_palette', PurplePalette::class);
+        $colorName = strtolower(str_replace(['MoonShine\ColorManager\Palettes\\', 'Palette'], '', $paletteClass));
+
+        $logo = "logo-{$colorName}.svg";
+
+        if (!file_exists(public_path("vendor/moonshine/$logo"))) {
+            $logo = 'logo.svg';
+        }
+
+        return $this->getAssetManager()->getAsset("/vendor/moonshine/$logo");
+    }
+
     protected function assets(): array
     {
         return [
@@ -94,14 +108,31 @@ final class MoonShineLayout extends AppLayout
 
     protected function menu(): array
     {
+        $mode = get_global_setting('cash_management_mode', 'express');
+
+        $ventasCajaItems = [
+            MenuItem::make(POS::class, 'Punto de Venta')->icon('computer-desktop'),
+            MenuItem::make(CajaResource::class, 'Control de Cajas')->icon('rectangle-group'),
+            MenuItem::make(VentaResource::class, 'Registros de Ventas')->icon('shopping-cart'),
+            MenuItem::make(VentaDetalleResource::class, 'Historial Detallado')->icon('list-bullet'),
+        ];
+
+        if ($mode !== 'express') {
+            $ventasCajaItems[] = MenuItem::make(CajaTurnoResource::class, 'Auditoría de Turnos')->icon('calculator');
+        }
+
+        $configItems = [
+            MenuDivider::make('Preferencias Regionales'),
+        ];
+
+        if ($mode !== 'express') {
+            $configItems[] = MenuItem::make(LocaleResource::class, 'Sucursales / Locales')->icon('map-pin');
+        }
+
+        $configItems[] = MenuItem::make(GlobalSettingResource::class, 'Ajustes del Sistema')->icon('globe-alt');
+
         return [
-            MenuGroup::make('Ventas & Caja', [
-                MenuItem::make(POS::class, 'Punto de Venta')->icon('computer-desktop'),
-                MenuItem::make(CajaResource::class, 'Control de Cajas')->icon('rectangle-group'),
-                MenuItem::make(VentaResource::class, 'Registros de Ventas')->icon('shopping-cart'),
-                MenuItem::make(VentaDetalleResource::class, 'Historial Detallado')->icon('list-bullet'),
-                MenuItem::make(CajaTurnoResource::class, 'Auditoría de Turnos')->icon('calculator'),
-            ])->icon('banknotes'),
+            MenuGroup::make('Ventas & Caja', $ventasCajaItems)->icon('banknotes'),
 
             MenuGroup::make('Inventario', [
                 MenuItem::make(ProductoResource::class, 'Catálogo de Productos')->icon('tag'),
@@ -112,11 +143,7 @@ final class MoonShineLayout extends AppLayout
                 MenuItem::make(\App\MoonShine\Resources\ProductoCostoHistorial\ProductoCostoHistorialResource::class, 'Historial de Costos')->icon('presentation-chart-line'),
             ])->icon('building-storefront'),
 
-            MenuGroup::make('Configuración', [
-                MenuDivider::make('Preferencias Regionales'),
-                MenuItem::make(LocaleResource::class, 'Sucursales / Locales')->icon('map-pin'),
-                MenuItem::make(GlobalSettingResource::class, 'Ajustes del Sistema')->icon('globe-alt'),
-
+            MenuGroup::make('Configuración', array_merge($configItems, [
                 MenuDivider::make('Seguridad y Accesos'),
                 MenuItem::make(MoonShineUserResource::class, 'Usuarios Administrativos')->icon('users'),
                 MenuItem::make(MoonShineUserRoleResource::class, 'Roles y Permisos')->icon('shield-check'),
@@ -127,7 +154,7 @@ final class MoonShineLayout extends AppLayout
                 MenuItem::make(fn() => route('admin.pos.download'), 'Descargar Terminal POS (EXE)')
                     ->icon('arrow-down-tray')
                     ->blank(),
-            ])->icon('cog-6-tooth'),
+            ]))->icon('cog-6-tooth'),
         ];
     }
 

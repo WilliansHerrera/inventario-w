@@ -3,168 +3,433 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS-Windows | Inventario-W</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <title>Terminal POS - Inventario W (Independiente)</title>
+    
+    <script>
+        (function() {
+            const cachedHTML = localStorage.getItem('pos_template');
+            if (cachedHTML) {
+                document.addEventListener("DOMContentLoaded", function() {
+                    if (window.templateApplied) return;
+                    window.templateApplied = true;
+                    
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(cachedHTML, 'text/html');
+                    
+                    const newContainer = doc.getElementById('pos-container');
+                    const oldContainer = document.getElementById('pos-container');
+                    if (newContainer && oldContainer) {
+                        // Preservar los datos de Alpine si es posible, o dejar que Alpine se re-inicialice
+                        oldContainer.parentNode.replaceChild(newContainer, oldContainer);
+                        console.log("Plantilla dinámica aplicada desde localStorage.");
+                    }
+                });
+            }
+        })();
+    </script>
+
+    <!-- Scripts Locales para Modo Offline -->
+
+    <script src="./js/tailwind.js"></script>
+    <script defer src="./js/alpine.js"></script>
+    <script src="./js/app.js"></script>
+
     <style>
+        #pos-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 99999;
+            overflow: hidden;
+        }
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #94a3b8 #f1f5f9;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #94a3b8;
+            border-radius: 9999px;
+            border: 2px solid #f1f5f9;
+        }
         [x-cloak] { display: none !important; }
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
-<body class="bg-slate-50 font-sans h-screen overflow-hidden" x-data="posApp()" x-init="init()">
-    
-    <!-- Navbar / Header -->
-    <header class="bg-slate-900 text-white h-16 flex items-center px-6 shadow-xl shrink-0 z-50">
-        <div class="flex items-center gap-3">
-            <div class="p-2 bg-indigo-500 rounded-xl shadow-lg">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+<body class="bg-slate-50 text-slate-800 font-[Inter,sans-serif]">
+
+<div
+    id="pos-container"
+    x-data="posApp()"
+    x-init="init()"
+    @keydown.window="handleKey($event)"
+    class="flex flex-col w-full bg-slate-50 text-slate-800 h-screen overflow-hidden"
+>
+    <!-- Audio para feedback Premium -->
+    <audio x-ref="scanSound" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTtvT19vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb08="></audio>
+
+    <!-- HEADER -->
+    <div class="flex items-center gap-4 px-6 h-16 bg-slate-900 text-white shrink-0 shadow-xl z-20">
+        <!-- Brand -->
+        <div class="flex items-center gap-3 select-none shrink-0">
+            <div class="w-10 h-10 shrink-0 p-1 bg-slate-800 rounded-xl shadow-lg border border-slate-700 flex items-center justify-center overflow-hidden">
+                <span class="text-indigo-400 font-black text-xl">W</span>
             </div>
             <div>
-                <p class="font-black text-sm uppercase italic leading-none">Inventario-W</p>
-                <p class="text-[10px] text-indigo-300 font-bold uppercase tracking-widest mt-1">Native Terminal v1.0</p>
-            </div>
-        </div>
-        
-        <div class="flex-1 px-8">
-            <div class="max-w-md relative group">
-                <input type="text" x-model="searchQuery" @input.debounce="search()" @keydown.enter.prevent="handleBarcode()" placeholder="Buscar productos... (Escáner/Bar)" 
-                       class="w-full bg-slate-800 border-none rounded-xl px-10 py-2 text-sm focus:ring-2 focus:ring-indigo-500 transition-all font-bold">
-                <svg class="w-4 h-4 absolute left-3 top-2.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <p class="font-black text-sm tracking-tighter uppercase italic">Inventario-W</p>
+                <p class="text-[10px] text-indigo-300 font-bold uppercase tracking-widest leading-none">Terminal POS v2.2.0</p>
             </div>
         </div>
 
-        <div class="flex items-center gap-4">
-            <div class="flex flex-col items-end">
-                <span :class="isOnline ? 'bg-emerald-500' : 'bg-rose-500'" class="w-2 h-2 rounded-full mb-1"></span>
-                <span class="text-[10px] font-black uppercase tracking-tighter" x-text="isOnline ? 'Online' : 'Offline Mode'"></span>
-            </div>
-            <button @click="forceSync()" class="p-2 hover:bg-slate-800 rounded-xl transition-colors">
-                <svg class="w-5 h-5" :class="isSyncing ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 00-15.357-2m15.357 2H15"/></svg>
-            </button>
-            <button @click="showSettings = true" class="p-2 hover:bg-slate-800 rounded-xl transition-colors text-slate-400 hover:text-white">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            </button>
-        </div>
-    </header>
+        <div class="flex-1"></div>
 
-    <main class="flex flex-1 overflow-hidden h-[calc(100vh-4rem)]">
-        
-        <!-- Left Column: Products -->
-        <div class="w-2/3 flex flex-col bg-white border-r border-slate-200">
-            <div class="flex-1 overflow-y-auto p-4">
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    <template x-for="p in filteredProducts" :key="p.id">
-                        <button @click="addToCart(p)" class="group bg-white border border-slate-200 rounded-2xl p-3 text-left hover:border-indigo-400 hover:shadow-xl transition-all active:scale-95">
-                            <div class="aspect-square bg-slate-100 rounded-xl mb-2 flex items-center justify-center font-black text-indigo-300 text-2xl" 
-                                 x-text="p.nombre.substring(0,2).toUpperCase()"></div>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase truncate" x-text="p.sku"></p>
-                            <p class="text-xs font-bold text-slate-800 line-clamp-2" x-text="p.nombre"></p>
-                            <p class="text-sm font-black text-indigo-600 mt-2 font-mono" x-text="'$' + parseFloat(p.precio_venta).toFixed(2)"></p>
+        <!-- Botón Sincronizar -->
+        <button 
+            @click="forceSync()" 
+            :disabled="isSyncing"
+            class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            <span>Sincronizar</span>
+        </button>
+
+        <!-- Indicador de Sincronización -->
+
+        <div x-show="isSyncing" class="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-900/50 border border-indigo-700/50 text-indigo-300 animate-pulse">
+            <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            <span>Actualizando...</span>
+        </div>
+
+        <!-- Estado de Conexión -->
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 border border-slate-700">
+
+            <span class="relative flex h-2 w-2">
+                <span :class="isOnline ? 'bg-emerald-400 animate-ping' : 'bg-rose-400 animate-ping'" class="absolute inline-flex h-full w-full rounded-full opacity-75"></span>
+                <span :class="isOnline ? 'bg-emerald-500' : 'bg-rose-500'" class="relative inline-flex rounded-full h-2 w-2"></span>
+            </span>
+            <span x-text="isOnline ? 'Online' : 'Offline'" class="text-slate-300"></span>
+        </div>
+
+        <!-- Caja selector -->
+        <div class="relative" x-data="{ open: false }" @click.away="open = false">
+            <button
+                @click="open = !open"
+                class="flex items-center gap-3 text-xs font-bold px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:border-indigo-400 transition-all active:scale-95 group"
+            >
+                <div class="relative flex h-2.5 w-2.5">
+                    <span :class="config.CAJA_ID ? 'animate-ping bg-emerald-400 opacity-75' : 'bg-slate-500'" class="absolute inline-flex h-full w-full rounded-full"></span>
+                    <span :class="config.CAJA_ID ? 'bg-emerald-500' : 'bg-slate-500'" class="relative inline-flex rounded-full h-2.5 w-2.5"></span>
+                </div>
+                <div class="text-left">
+                    <p class="text-[9px] text-slate-400 uppercase leading-none mb-0.5" x-text="config.CAJA_ID ? 'Tpv Activa' : 'Sin caja'"></p>
+                    <span class="truncate max-w-[120px]" x-text="config.CAJA_ID ? ('Caja #' + config.CAJA_ID) : 'SELECCIONAR CAJA'"></span>
+                </div>
+                <svg class="w-4 h-4 text-slate-500 group-hover:text-indigo-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+
+            <!-- Dropdown -->
+            <div x-show="open" x-cloak
+                 x-transition:enter="transition ease-out duration-100"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 class="absolute right-0 top-full mt-2 w-72 bg-white text-slate-800 border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden backdrop-blur-md">
+                <div class="px-5 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-500">Cajas Disponibles</span>
+                </div>
+                <div class="max-h-80 overflow-y-auto py-2">
+                    <template x-for="caja in availableCajas" :key="caja.id">
+                        <button
+                            @click="config.CAJA_ID = caja.id; open = false; checkShiftStatus();"
+                            class="w-full text-left px-5 py-3 hover:bg-indigo-50 transition-colors flex items-center justify-between gap-2 border-b border-slate-50 last:border-0"
+                            :class="config.CAJA_ID === caja.id ? 'bg-indigo-50 border-l-4 border-l-indigo-500' : ''"
+                        >
+                            <div class="flex flex-col gap-0.5">
+                                <span class="text-sm font-black text-slate-800 tracking-tight" x-text="caja.nombre"></span>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase" x-text="config.LOCALE_NOMBRE || 'Sucursal Actual'"></span>
+
+                            </div>
                         </button>
                     </template>
                 </div>
             </div>
         </div>
 
-        <!-- Right Column: Cart -->
-        <div class="w-1/3 flex flex-col bg-slate-50">
-            <div class="px-6 py-4 border-b border-slate-200 bg-white flex justify-between items-center">
-                <span class="text-xs font-black uppercase text-slate-500">Mesa de Trabajo</span>
-                <button @click="cart = []" class="text-[10px] font-bold text-rose-500">Vaciar</button>
+        <!-- Configuración -->
+        <button @click="showSettings = true" class="w-10 h-10 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center hover:border-indigo-500 text-slate-400 hover:text-white transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- MAIN BODY -->
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- LEFT: Search + Products -->
+        <div class="flex flex-col w-1/2 overflow-hidden bg-white border-r border-slate-200 min-w-0">
+            <!-- Search Bar -->
+            <div class="px-6 py-4 bg-white/70 backdrop-blur-lg border-b border-slate-100 sticky top-0 z-10">
+                <div class="relative group">
+                    <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input
+                        x-ref="searchInput"
+                        x-model="searchQuery"
+                        @input.debounce.200ms="search()"
+                        @keyup.enter="handleBarcode()"
+                        type="text"
+                        placeholder="Buscar por NOMBRE, SKU o CÓDIGO..."
+                        class="w-full pl-12 pr-6 h-12 text-sm font-bold border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 bg-white/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+
+                    >
+                </div>
             </div>
-            
-            <div class="flex-1 overflow-y-auto px-4 py-4 space-y-2">
+
+            <!-- Product Grid -->
+            <div class="flex-1 overflow-y-auto p-6 bg-slate-50">
+                <div x-show="isSyncing" class="flex flex-col items-center justify-center py-10 text-slate-400 gap-3 animate-pulse">
+                    <span class="text-xs font-black uppercase tracking-widest">Sincronizando...</span>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <template x-for="p in filteredProducts" :key="p.id">
+                        <button
+                            @click="addToCart(p)"
+                            class="group relative bg-white border border-slate-200 rounded-2xl p-4 text-left transition-all duration-200 hover:shadow-xl hover:border-indigo-200 active:scale-95"
+                        >
+                            <div class="absolute top-2 right-2 z-10">
+                                <span class="bg-white/90 backdrop-blur-sm shadow-sm border border-slate-100 text-[9px] font-black px-2 py-0.5 rounded-full text-slate-500 uppercase tracking-tighter" x-text="p.stock + ' Uds'"></span>
+                            </div>
+
+                            <div class="w-full aspect-square rounded-xl mb-3 overflow-hidden flex items-center justify-center relative bg-indigo-50">
+                                <span class="text-2xl font-black tracking-tighter text-indigo-600" x-text="p.nombre.substring(0,2).toUpperCase()"></span>
+                            </div>
+
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate" x-text="p.sku"></p>
+                            <p class="text-xs font-bold text-slate-800 leading-tight h-8 line-clamp-2" x-text="p.nombre"></p>
+                            <div class="flex items-end justify-between mt-2">
+                                <p class="text-base font-black text-indigo-700 font-mono" x-text="fmt(p.precio_venta)"></p>
+                            </div>
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Cart + Payments -->
+        <div class="w-1/2 flex flex-col bg-white shrink-0 border-l border-slate-200">
+            <!-- Checkout Header -->
+            <div class="px-6 py-4 border-b border-slate-100 bg-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <h3 class="text-sm font-black uppercase tracking-wider text-slate-700">Mesa de Trabajo</h3>
+                    <span class="text-xs text-slate-400" x-text="cart.length + ' items'"></span>
+                </div>
+                <button @click="cart = []" x-show="cart.length > 0" class="text-xs font-bold text-rose-500 hover:text-rose-700">Vaciar</button>
+            </div>
+
+            <!-- Cart Items -->
+            <div class="flex-1 overflow-y-auto px-5 py-4 space-y-2.5 bg-slate-50/50">
                 <template x-for="(item, idx) in cart" :key="item.id">
-                    <div class="bg-white rounded-xl border border-slate-200 p-3 flex items-center gap-3">
-                        <div class="flex-1">
-                            <p class="text-xs font-bold text-slate-800" x-text="item.nombre"></p>
-                            <p class="text-[10px] text-slate-400 font-mono" x-text="'$' + item.precio_venta + ' x ' + item.qty"></p>
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 px-4 py-3.5 flex items-center gap-4">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-black text-slate-800 leading-tight line-clamp-1" x-text="item.nombre"></p>
+                            <p class="text-xs font-bold text-slate-400 mt-0.5" x-text="fmt(item.precio_venta) + ' c/u'"></p>
                         </div>
-                        <div class="flex items-center gap-1">
-                            <button @click="updateQty(idx, -1)" class="w-6 h-6 bg-slate-100 rounded flex items-center justify-center">-</button>
-                            <span class="w-5 text-center text-xs font-bold" x-text="item.qty"></span>
-                            <button @click="updateQty(idx, 1)" class="w-6 h-6 bg-slate-100 rounded flex items-center justify-center">+</button>
+                        
+                        <div class="flex items-center gap-1.5 px-1.5 py-1.5 bg-slate-100 rounded-xl">
+                            <button @click="updateQty(idx, -1)" class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center font-black text-slate-600">-</button>
+                            <span class="w-8 text-center text-sm font-black" x-text="item.qty"></span>
+                            <button @click="updateQty(idx, 1)" class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center font-black text-slate-600">+</button>
                         </div>
-                        <div class="text-right min-w-[60px]">
-                            <p class="text-xs font-black text-slate-900 font-mono" x-text="'$' + (item.precio_venta * item.qty).toFixed(2)"></p>
+
+                        <div class="text-right min-w-[90px]">
+                            <p class="text-sm font-black text-slate-900" x-text="fmt(item.precio_venta * item.qty)"></p>
                         </div>
                     </div>
                 </template>
             </div>
 
-            <!-- Footer: Totals and Pay -->
-            <div class="bg-white border-t border-slate-200 p-6 shadow-2xl shadow-slate-900/40">
-                <div class="flex justify-between items-end mb-4">
-                    <span class="text-xs font-black text-slate-400 uppercase">Total Cobro</span>
-                    <span class="text-4xl font-black text-indigo-600 font-mono tracking-tighter" x-text="'$' + total().toFixed(2)"></span>
+            <!-- BARRA DE COBRO -->
+            <div class="p-6 bg-white border-t border-slate-200 shadow-2xl">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-black uppercase tracking-wider text-slate-400">Total a Pagar</span>
+                    <span class="text-3xl font-black text-indigo-600 font-mono" x-text="fmt(total())"></span>
                 </div>
-                
-                <button @click="processPayment()" :disabled="cart.length === 0" 
-                        class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl hover:bg-indigo-600 disabled:bg-slate-200 disabled:text-slate-400 transition-all active:scale-95 shadow-xl shadow-indigo-600/20">
-                    COBRAR (F5)
-                </button>
-            </div>
-        </div>
-    </main>
 
-    <!-- Success Modal -->
-    <div x-show="showSuccess" x-cloak class="fixed inset-0 bg-slate-900/90 flex items-center justify-center z-[100] backdrop-blur-xl">
-        <div class="bg-white rounded-[40px] p-10 text-center space-y-6 max-w-sm w-full mx-4">
-            <div class="w-20 h-20 bg-emerald-500 rounded-3xl flex items-center justify-center mx-auto text-white shadow-2xl shadow-emerald-500/40 rotate-12">
-                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"/></svg>
-            </div>
-            <h2 class="text-2xl font-black text-slate-900">¡Venta Exitosa!</h2>
-            <p class="text-sm text-slate-400">La venta se ha guardado localmente y se sincronizará automáticamente.</p>
-            <button @click="showSuccess = false" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl">Nueva Venta</button>
-        </div>
-    </div>
-
-    <!-- Settings Modal -->
-    <div x-show="showSettings" x-cloak class="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-[110] backdrop-blur-md">
-        <div class="bg-white rounded-[32px] p-8 max-w-md w-full mx-4 shadow-2xl space-y-6">
-            <div class="flex justify-between items-center">
-                <h3 class="text-lg font-black text-slate-900 uppercase italic">Configuración Técnica</h3>
-                <button @click="showSettings = false" class="text-slate-400 hover:text-slate-900">&times;</button>
-            </div>
-            
-            <div class="space-y-4">
-                <div class="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100">
-                    <label class="block text-[11px] font-black text-indigo-600 uppercase mb-2">1. Configuración de Sucursal</label>
-                    <textarea x-model="importConfig" @input="handleImport()" placeholder="Pega el bloque configurador del sistema servidor aquí..." 
-                              class="w-full bg-white border border-indigo-100 rounded-xl px-4 py-3 text-[10px] font-mono focus:ring-2 focus:ring-indigo-500 text-slate-500 shadow-inner resize-none" rows="3"></textarea>
-                    
-                    <div x-show="config.SYNC_TOKEN && config.LOCAL_ID" class="mt-3 flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-2 rounded-lg">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                        <span class="text-[10px] font-black uppercase">Credenciales de Sucursal Validadas</span>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Método de Pago</label>
+                        <select x-model="paymentMethod" class="w-full h-10 px-3 text-xs font-bold border-2 border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500">
+                            <option value="efectivo">Efectivo</option>
+                            <option value="tarjeta">Tarjeta</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Recibido (Efectivo)</label>
+                        <input type="number" x-model="recibido" class="w-full h-10 px-3 text-xs font-bold border-2 border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500" placeholder="0.00">
                     </div>
                 </div>
 
-                <div x-show="availableCajas.length > 0" class="bg-slate-50 p-5 rounded-2xl border border-slate-200">
-                    <label class="block text-[11px] font-black text-slate-600 uppercase mb-2">2. Asignación de Caja Local</label>
-                    <select x-model="config.CAJA_ID" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 shadow-sm font-bold text-slate-800">
-                        <template x-for="caja in availableCajas" :key="caja.id">
-                            <option :value="caja.id" x-text="caja.nombre + (caja.abierta ? '  (Operativa)' : '  (Cerrada)')"></option>
-                        </template>
-                    </select>
-                </div>
-
-                <div x-show="availableCajas.length === 0 && importConfig !== ''" class="flex items-center gap-2 text-rose-500 bg-rose-50 p-3 rounded-lg border border-rose-100">
-                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                    <span class="text-[10px] font-bold">Configuración inválida o la Sucursal no posee cajas registradas.</span>
-                </div>
-            </div>
-
-            <div class="pt-4 flex gap-3">
-                <button @click="saveSettings()" class="flex-1 bg-indigo-600 text-white font-black py-4 rounded-2xl hover:bg-indigo-700 transition-all active:scale-95">
-                    GUARDAR CAMBIOS
+                <button
+                    @click="processPayment()"
+                    :disabled="cart.length === 0 || !isShiftOpen"
+                    class="w-full h-12 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-black text-sm rounded-2xl transition-all shadow-lg flex items-center justify-center gap-2"
+                >
+                    <span>COBRAR</span>
                 </button>
             </div>
-            <p class="text-[9px] text-slate-400 text-center uppercase font-bold tracking-widest">Los cambios requieren reiniciar la sincronización</p>
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="js/app.js"></script>
+    <!-- MODAL DE APERTURA DE CAJA -->
+    <div x-show="showShiftOpenModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 border border-slate-100">
+            <h3 class="font-black text-slate-800 uppercase tracking-tight text-lg mb-2">Abrir Caja</h3>
+            <p class="text-xs text-slate-500 mb-4">Ingresa el monto inicial de efectivo en caja.</p>
+            <input type="number" x-model="shiftOpenAmount" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-2xl font-black text-slate-800 mb-4 focus:border-indigo-500 outline-none" placeholder="0.00">
+            <button @click="openShift()" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-xl transition-all">INICIAR JORNADA</button>
+        </div>
+    </div>
+
+    <!-- MODAL DE ÉXITO -->
+    <div x-show="showSuccess" class="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 p-4 backdrop-blur-xl">
+        <div class="bg-white rounded-[40px] shadow-2xl w-full max-w-sm p-6 text-center space-y-4">
+            <div class="w-16 h-16 bg-emerald-500 rounded-[24px] flex items-center justify-center mx-auto shadow-xl shadow-emerald-500/30">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <h2 class="text-xl font-black text-slate-900 tracking-tighter">¡Venta Realizada!</h2>
+            
+            <div class="flex flex-col gap-2 pt-4">
+                <button @click="printTicket()" class="w-full py-3 bg-slate-900 rounded-[15px] text-xs font-black text-white hover:bg-slate-800 flex items-center justify-center gap-2">Imprimir Ticket</button>
+                <button @click="showSuccess = false" class="w-full py-2.5 bg-white border border-slate-200 rounded-[15px] text-xs font-black text-slate-500 hover:bg-slate-50">Nueva Venta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIGURACIÓN -->
+    <div x-show="showSettings" class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 border border-slate-100">
+            <h3 class="font-black text-slate-800 uppercase tracking-tight text-lg mb-4">Configuración</h3>
+            
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">URL de la API</label>
+                    <input type="text" x-model="config.API_BASE" class="w-full p-3 border border-slate-200 rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Token de Sincronización</label>
+                    <input type="text" x-model="config.SYNC_TOKEN" class="w-full p-3 border border-slate-200 rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Establecimiento Asignado</label>
+                    <input type="text" :value="config.LOCALE_NOMBRE || 'Pendiente de Sincronización'" disabled class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-500">
+                </div>
+
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Importar Configuración (JSON/Base64)</label>
+                    <textarea x-model="importConfig" class="w-full p-3 border border-slate-200 rounded-xl text-sm h-20" placeholder="Pega el código de configuración aquí..."></textarea>
+                    <button @click="handleImport()" class="mt-2 px-4 py-2 bg-slate-800 text-white text-xs font-bold rounded-xl">Procesar Importación</button>
+                </div>
+            </div>
+            
+            <div class="flex gap-3">
+                <button @click="showSettings = false" class="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl">Cancelar</button>
+                <button @click="saveSettings()" class="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE LOGIN POR PIN -->
+    <div x-show="showLoginModal" class="fixed inset-0 z-[100] bg-slate-950/95 flex items-center justify-center p-4 backdrop-blur-xl">
+        
+        <!-- Botón de Configuración de Emergencia -->
+        <button @click="showSettings = true" class="absolute top-6 right-6 w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center hover:border-indigo-500 text-slate-400 hover:text-white transition-all z-[110]">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+        </button>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-[30px] shadow-2xl w-full max-w-sm p-4 text-center space-y-3">
+
+            <!-- Logo / Brand -->
+            <div class="w-12 h-12 bg-indigo-600 rounded-[18px] flex items-center justify-center mx-auto shadow-2xl shadow-indigo-500/30">
+                <span class="text-white font-black text-2xl tracking-tighter italic">W</span>
+            </div>
+            
+            <div>
+                <h2 class="text-base font-black text-white tracking-tight uppercase tracking-widest">Terminal POS</h2>
+                <p class="text-[10px] text-slate-400 mt-0.5">Selecciona tu usuario e ingresa tu PIN</p>
+            </div>
+
+            <!-- Selector de Usuario -->
+            <div class="relative">
+                <select x-model="loginSelectedUser" class="w-full h-11 px-3 bg-slate-800 border-2 border-slate-700 text-white font-bold text-sm rounded-xl focus:outline-none focus:border-indigo-500 appearance-none">
+                    <option value="">[ Seleccionar Cajero ]</option>
+                    <template x-for="user in users" :key="user.id">
+                        <option :value="user.id" x-text="user.name"></option>
+                    </template>
+                </select>
+            </div>
+
+            <!-- Botón Sincronizar -->
+            <button @click="forceSync()" class="w-full py-1.5 bg-slate-800 hover:bg-indigo-900/30 border border-slate-700 hover:border-indigo-500 text-indigo-400 hover:text-indigo-300 text-[10px] font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                <span>Sincronizar Datos</span>
+            </button>
+
+            <!-- Display de PIN -->
+            <div class="flex justify-center gap-2 py-1">
+                <template x-for="i in [0,1,2,3]" :key="i">
+                    <div class="w-3 h-3 rounded-full border-2 border-slate-700 transition-all duration-100"
+                         :class="loginPin.length > i ? 'bg-indigo-500 border-indigo-500 scale-125 shadow-lg shadow-indigo-500/50' : 'bg-slate-800'">
+                    </div>
+                </template>
+            </div>
+
+            <!-- Teclado Numérico -->
+            <div class="grid grid-cols-3 gap-3 max-w-[220px] mx-auto">
+                <template x-for="n in [1,2,3,4,5,6,7,8,9]" :key="n">
+                    <button @click="if(loginPin.length < 4) loginPin += n" 
+                            class="w-12 h-12 bg-slate-800 hover:bg-slate-700 active:scale-95 text-white text-lg font-black rounded-xl flex items-center justify-center transition-all border border-slate-700/50 shadow-md" x-text="n"></button>
+                </template>
+                <button @click="loginPin = ''" class="w-12 h-12 bg-slate-800 hover:bg-rose-900/50 text-rose-400 text-xs font-black rounded-xl flex items-center justify-center border border-slate-700/50">C</button>
+                <button @click="if(loginPin.length < 4) loginPin += 0" class="w-12 h-12 bg-slate-800 hover:bg-slate-700 text-white text-lg font-black rounded-xl flex items-center justify-center border border-slate-700/50">0</button>
+                <button @click="login()" class="w-12 h-12 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-sm font-black rounded-xl flex items-center justify-center border border-indigo-500 shadow-lg shadow-indigo-500/20">OK</button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+    // Mapeo de funciones auxiliares que Alpine necesita
+    function fmt(v) {
+        return '$ ' + parseFloat(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+</script>
+
 </body>
 </html>

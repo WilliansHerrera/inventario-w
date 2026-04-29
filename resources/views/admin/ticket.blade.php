@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="UTF-8">
-    <title>Ticket #{{ str_pad($venta->id, 6, '0', STR_PAD_LEFT) }}</title>
+    <title>{{ __('Ticket') }} #{{ str_pad($venta->id, 6, '0', STR_PAD_LEFT) }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Courier New', Courier, monospace; font-size: 12px; color: #000; background: #fff; padding: 12px; width: 300px; }
@@ -24,15 +24,15 @@
 <body>
 
     <p class="title">{{ get_global_setting('company_name', 'Mi Empresa') }}</p>
-    <p class="sub">Punto de Venta</p>
+    <p class="sub">{{ __('Punto de Venta') }}</p>
 
     <hr>
 
     <table>
-        <tr><td>Ticket:</td><td class="right">#{{ str_pad($venta->id, 6, '0', STR_PAD_LEFT) }}</td></tr>
-        <tr><td>Caja:</td><td class="right">{{ $venta->caja->nombre ?? '—' }}</td></tr>
-        <tr><td>Fecha:</td><td class="right">{{ $venta->created_at->format('d/m/Y H:i') }}</td></tr>
-        <tr><td>Pago:</td><td class="right">{{ ucfirst($venta->metodo_pago) }}</td></tr>
+        <tr><td>{{ __('Ticket:') }}</td><td class="right">#{{ str_pad($venta->id, 6, '0', STR_PAD_LEFT) }}</td></tr>
+        <tr><td>{{ __('Caja:') }}</td><td class="right">{{ $venta->caja->nombre ?? '—' }}</td></tr>
+        <tr><td>{{ __('Fecha:') }}</td><td class="right">{{ $venta->created_at->format('d/m/Y H:i') }}</td></tr>
+        <tr><td>{{ __('Pago:') }}</td><td class="right">{{ __(ucfirst($venta->metodo_pago)) }}</td></tr>
     </table>
 
     <hr>
@@ -40,10 +40,10 @@
     <table>
         <thead>
             <tr>
-                <th>Producto</th>
-                <th class="right">Cant.</th>
-                <th class="right">Precio</th>
-                <th class="right">Subtotal</th>
+                <th>{{ __('Producto') }}</th>
+                <th class="right">{{ __('Cant.') }}</th>
+                <th class="right">{{ __('Precio') }}</th>
+                <th class="right">{{ __('Subtotal') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -62,12 +62,12 @@
 
     <table>
         <tr class="total-row">
-            <td>TOTAL</td>
+            <td>{{ __('TOTAL') }}</td>
             <td class="right">{{ format_currency($venta->total) }}</td>
         </tr>
     </table>
 
-    <p class="footer">Gracias por su compra.<br>{{ now()->format('d/m/Y H:i:s') }}</p>
+    <p class="footer">{{ __('Gracias por su compra.') }}<br>{{ now()->format('d/m/Y H:i:s') }}</p>
 
     <script>window.onload = () => window.print();</script>
 </body>

@@ -3,6 +3,14 @@ function posApp() {
         db: null,
         isOnline: navigator.onLine,
         isSyncing: false,
+        isShiftOpen: false,
+        shiftChecking: true,
+        showShiftOpenModal: false,
+        showShiftCloseModal: false,
+        shiftOpenAmount: '',
+        shiftCloseAmount: '',
+        paymentMethod: 'efectivo',
+        isExpress: false,
         showSuccess: false,
         showSettings: false,
         searchQuery: '',
@@ -17,70 +25,28 @@ function posApp() {
             API_BASE: 'http://localhost/Inventario-w/public/api',
             SYNC_TOKEN: '',
             LOCAL_ID: null,
-            CAJA_ID: null
+            CAJA_ID: null,
+            PRINTER_NAME: '',
+            IS_EXPRESS: false
         },
         availableCajas: [],
+        systemPrinters: [],
+        lastSale: null,
         importConfig: '',
+        
+        // Variables de Login
+        users: [],
+        currentUser: null,
+        showLoginModal: true,
+        loginPin: '',
+        loginSelectedUser: null,
 
-        async init() {
-            // Cargar configuración guardada
-            const savedConfig = localStorage.getItem('pos_config');
-            if (savedConfig) {
-                this.config = JSON.parse(savedConfig);
-            }
-            const savedCajas = localStorage.getItem('pos_cajas');
-            if (savedCajas) {
-                this.availableCajas = JSON.parse(savedCajas);
-            }
 
-            window.addEventListener('online', () => this.isOnline = true);
-            window.addEventListener('offline', () => this.isOnline = false);
-
-            // Escáner Global: Escuchar teclas en toda la ventana
-            window.addEventListener('keydown', (e) => {
-                // Si el foco está en un input o textarea (que no sea el de búsqueda), dejar que fluya normal
-                const active = document.activeElement;
-                if (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA') {
-                    // Si es el input de búsqueda, procesar normalmente (ya tiene su binding)
-                    if (active.getAttribute('x-model') === 'searchQuery') return;
-                }
-
-                const currentTime = Date.now();
-                const diff = currentTime - this.lastKeyTime;
-                this.lastKeyTime = currentTime;
-
-                // Si se presiona Enter, intentar procesar el buffer
-                if (e.key === 'Enter') {
-                    if (this.barcodeBuffer.length > 2) {
-                        this.processGlobalBarcode(this.barcodeBuffer);
-                        this.barcodeBuffer = '';
-                    }
-                    return;
-                }
-
-                // Detectar velocidad de escaneo (típicamente < 50ms entre teclas)
-                // O si el buffer ya tiene algo, seguir acumulando
-                if (diff < 50 || this.barcodeBuffer.length > 0) {
-                    if (e.key.length === 1) { // Solo caracteres imprimibles
-                        this.barcodeBuffer += e.key;
-                        
-                        // Limpiar buffer si pasa mucho tiempo sin actividad (ej. 500ms)
-                        clearTimeout(this.barcodeTimeout);
-                        this.barcodeTimeout = setTimeout(() => {
-                            this.barcodeBuffer = '';
-                        }, 500);
-                    }
-                } else {
-                    // Si el tiempo es lento, probablemente sea un humano, resetear buffer
-                    this.barcodeBuffer = '';
-                }
-            });
-
+        async initDB() {
+            if (this.db) return true;
             try {
-                // Inicializar SQLite manualmente a nivel nativo (Vanilla JS sin Vite)
                 const dbPath = "sqlite:pos.db";
                 const { invoke } = window.__TAURI__.tauri;
-                
                 await invoke("plugin:sql|load", { db: dbPath });
                 
                 this.db = {
@@ -116,15 +82,95 @@ function posApp() {
                         created_at TEXT
                     )
                 `);
+                return true;
+            } catch (err) {
+                console.error("Error inicializando DB nativa:", err);
+                return false;
+            }
+        },
 
+        async init() {
+            try {
+                // Cargar configuración guardada
+
+            const savedConfig = localStorage.getItem('pos_config');
+            if (savedConfig) {
+                this.config = JSON.parse(savedConfig);
+            }
+            const savedCajas = localStorage.getItem('pos_cajas');
+            if (savedCajas) {
+                this.availableCajas = JSON.parse(savedCajas);
+            }
+            const savedUsers = localStorage.getItem('pos_users');
+            if (savedUsers) {
+                this.users = JSON.parse(savedUsers);
+            }
+
+
+            window.addEventListener('online', () => this.isOnline = true);
+            window.addEventListener('offline', () => this.isOnline = false);
+
+            // Escáner Global
+            window.addEventListener('keydown', (e) => {
+                const active = document.activeElement;
+                if (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA') {
+                    if (active.getAttribute('x-model') === 'searchQuery') return;
+                }
+
+                const currentTime = Date.now();
+                const diff = currentTime - this.lastKeyTime;
+                this.lastKeyTime = currentTime;
+
+                if (e.key === 'Enter') {
+                    if (this.barcodeBuffer.length > 2) {
+                        this.processGlobalBarcode(this.barcodeBuffer);
+                        this.barcodeBuffer = '';
+                    }
+                    return;
+                }
+
+                if (diff < 50 || this.barcodeBuffer.length > 0) {
+                    if (e.key.length === 1) {
+                        this.barcodeBuffer += e.key;
+                        clearTimeout(this.barcodeTimeout);
+                        this.barcodeTimeout = setTimeout(() => {
+                            this.barcodeBuffer = '';
+                        }, 500);
+                    }
+                } else {
+                    this.barcodeBuffer = '';
+                }
+            });
+
+            // Inicializar Base de Datos nativa
+            await this.initDB();
+            if (this.db) {
                 await this.loadLocalProducts();
+            }
+
+
+
                 
+                // Cargar impresoras del sistema
+                await this.refreshPrinters();
+
+                // Escucha de F6 para Imprimir
+                window.addEventListener('keydown', (e) => {
+                    if (e.key === 'F6' && this.showSuccess && this.lastSale) {
+                        this.printTicket();
+                    }
+                });
+
                 // Monitor Activo del Servidor (Heartbeat) y Sincronización
                 this.checkServer();
+                this.checkTemplateUpdate();
                 setInterval(() => this.checkServer(), 15000);
                 setInterval(() => this.backgroundSync(), 30000);
+                setInterval(() => this.checkTemplateUpdate(), 300000); // Cada 5 min
+
                 
                 if (this.isOnline && this.config.SYNC_TOKEN && this.config.CAJA_ID) {
+                    await this.checkShiftStatus();
                     await this.forceSync();
                 }
 
@@ -143,6 +189,7 @@ function posApp() {
             this.importConfig = '';
             // Intentar sincronizar después de guardar
             if (this.isOnline && this.config.SYNC_TOKEN && this.config.CAJA_ID) {
+                this.checkShiftStatus();
                 this.forceSync();
             }
         },
@@ -169,16 +216,35 @@ function posApp() {
                 
                 if (data.cajas && Array.isArray(data.cajas)) {
                     this.availableCajas = data.cajas;
-                    if (this.availableCajas.length > 0) {
-                        this.config.CAJA_ID = this.availableCajas[0].id; // Forzar selección de la primera
+                    
+                    // Lógica Express: Autoselección de caja
+                    const isExpress = data.settings && data.settings.cash_management_mode === 'express';
+                    this.config.IS_EXPRESS = isExpress;
+                    if (isExpress && this.availableCajas.length > 0) {
+                        this.config.CAJA_ID = this.availableCajas[0].id;
+                        console.log("Modo Express: Caja autoconfigurada:", this.availableCajas[0].nombre);
+                    } else if (this.availableCajas.length === 1) {
+                         this.config.CAJA_ID = this.availableCajas[0].id; // Fallback razonable
                     }
                 }
                 
                 // Trigger reactivo explícito si es necesario
                 this.$forceUpdate && this.$forceUpdate();
+                if (this.config.CAJA_ID) {
+                    this.checkShiftStatus();
+                }
                 
             } catch (e) {
                 console.error("Error importando Config:", e);
+            }
+        },
+
+        async refreshPrinters() {
+            try {
+                const { invoke } = window.__TAURI__.tauri;
+                this.systemPrinters = await invoke('list_printers');
+            } catch (e) {
+                console.warn("No se pudieron listar las impresoras:", e);
             }
         },
 
@@ -210,11 +276,146 @@ function posApp() {
             } catch (e) { /* Silencioso */ }
         },
 
+        async checkShiftStatus() {
+            if (this.config.IS_EXPRESS) {
+                this.isShiftOpen = true;
+                this.shiftChecking = false;
+                return;
+            }
+            if (!this.config.CAJA_ID) {
+                this.shiftChecking = false;
+                return;
+            }
+            if (!this.isOnline) {
+                this.shiftChecking = false;
+                return; 
+            }
+            try {
+                this.shiftChecking = true;
+                const path = `/api/v1/sync/shift/status?caja_id=${this.config.CAJA_ID}`;
+                const { signature, timestamp } = await this.generateSignature('GET', path);
+
+                const res = await fetch(`${this.config.API_BASE}/sync/shift/status?caja_id=${this.config.CAJA_ID}`, {
+                    headers: {
+                        'X-Sync-ID': this.config.LOCAL_ID,
+                        'X-Sync-Timestamp': timestamp,
+                        'X-Sync-Signature': signature,
+                        'Accept': 'application/json'
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.isShiftOpen = data.abierta;
+                }
+            } catch (e) {
+                console.error("Error checking shift status", e);
+            } finally {
+                this.shiftChecking = false;
+            }
+        },
+
+        async openShift() {
+            if (!this.shiftOpenAmount || isNaN(this.shiftOpenAmount) || this.shiftOpenAmount < 0) {
+                alert("Ingrese un monto válido");
+                return;
+            }
+            if (!this.isOnline) {
+                alert("Se requiere conexión para abrir la caja.");
+                return; // Opcionalmente implementar apertura 100% offline aquí
+            }
+            try {
+                const body = JSON.stringify({
+                    caja_id: this.config.CAJA_ID,
+                    monto_apertura: parseFloat(this.shiftOpenAmount)
+                });
+                const path = `/api/v1/sync/shift/open`;
+                const { signature, timestamp } = await this.generateSignature('POST', path, body);
+
+                const res = await fetch(`${this.config.API_BASE}/sync/shift/open`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Sync-ID': this.config.LOCAL_ID,
+                        'X-Sync-Timestamp': timestamp,
+                        'X-Sync-Signature': signature,
+                        'Accept': 'application/json'
+                    },
+                    body
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.isShiftOpen = true;
+                    this.showShiftOpenModal = false;
+                    this.shiftOpenAmount = '';
+                } else {
+                    alert("Error al abrir caja: " + (data.error || 'Desconocido'));
+                }
+            } catch (e) {
+                alert("Error de conexión al abrir caja.");
+            }
+        },
+
+        async closeShift() {
+            if (!this.shiftCloseAmount || isNaN(this.shiftCloseAmount) || this.shiftCloseAmount < 0) {
+                alert("Ingrese un monto válido");
+                return;
+            }
+            if (!this.isOnline) {
+                alert("Se requiere conexión para cerrar la caja.");
+                return;
+            }
+            try {
+                const body = JSON.stringify({
+                    caja_id: this.config.CAJA_ID,
+                    monto_cierre: parseFloat(this.shiftCloseAmount)
+                });
+                const path = `/api/v1/sync/shift/close`;
+                const { signature, timestamp } = await this.generateSignature('POST', path, body);
+
+                const res = await fetch(`${this.config.API_BASE}/sync/shift/close`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Sync-ID': this.config.LOCAL_ID,
+                        'X-Sync-Timestamp': timestamp,
+                        'X-Sync-Signature': signature,
+                        'Accept': 'application/json'
+                    },
+                    body
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.isShiftOpen = false;
+                    this.showShiftCloseModal = false;
+                    this.shiftCloseAmount = '';
+                    alert("Caja cerrada correctamente. Ya puedes imprimir el reporte Z desde el panel web.");
+                } else {
+                    alert("Error al cerrar caja: " + (data.error || 'Desconocido'));
+                }
+            } catch (e) {
+                alert("Error de conexión al cerrar caja.");
+            }
+        },
+
         async loadLocalProducts() {
-            if (!this.db) return;
-            this.products = await this.db.select("SELECT * FROM products");
+            if (this.db) {
+                try {
+                    this.products = await this.db.select("SELECT * FROM products");
+                } catch (e) {
+                    console.warn("Error SQLite:", e);
+                }
+            }
+            
+            if (!this.products || this.products.length === 0) {
+                const saved = localStorage.getItem('pos_products');
+                if (saved) {
+                    this.products = JSON.parse(saved);
+                }
+            }
+            
             this.filteredProducts = [...this.products];
         },
+
 
         search() {
             const q = this.searchQuery.toLowerCase().trim();
@@ -226,6 +427,7 @@ function posApp() {
         },
 
         processGlobalBarcode(code) {
+            if (!this.isShiftOpen) return;
             const q = code.toLowerCase().trim();
             const product = this.products.find(p => 
                 (p.codigo_barra && p.codigo_barra.toLowerCase() === q) || 
@@ -242,6 +444,7 @@ function posApp() {
         },
 
         handleBarcode() {
+            if (!this.isShiftOpen) return;
             const q = this.searchQuery.trim().toLowerCase();
             if (!q) return;
 
@@ -267,6 +470,7 @@ function posApp() {
         },
 
         addToCart(p) {
+            if (!this.isShiftOpen) return;
             const existing = this.cart.find(i => i.id === p.id);
             if (existing) {
                 existing.qty++;
@@ -287,12 +491,12 @@ function posApp() {
         },
 
         async processPayment() {
-            if (this.cart.length === 0) return;
+            if (!this.isShiftOpen || this.cart.length === 0) return;
 
             const sale = {
                 local_uuid: crypto.randomUUID(),
                 caja_id: this.config.CAJA_ID,
-                metodo_pago: 'efectivo',
+                metodo_pago: this.paymentMethod,
                 total: this.total(),
                 items: JSON.stringify(this.cart.map(i => ({ id: i.id, qty: i.qty, price: i.precio_venta }))),
                 created_at: new Date().toISOString()
@@ -306,9 +510,22 @@ function posApp() {
                 );
             }
 
+            // 1.5 Guardar para impresión inmediata
+            this.lastSale = {
+                total: sale.total,
+                items: [...this.cart],
+                date: sale.created_at,
+                id: sale.local_uuid.substring(0, 8)
+            };
+
             // 2. Mostrar éxito
             this.cart = [];
             this.showSuccess = true;
+
+            // Auto-imprimir si hay impresora configurada
+            if (this.config.PRINTER_NAME) {
+                this.printTicket();
+            }
 
             // 3. Intentar subir inmediatamente si hay internet
             if (this.isOnline && this.config.SYNC_TOKEN) {
@@ -345,9 +562,41 @@ function posApp() {
             return { signature: signatureHex, timestamp };
         },
 
+        async checkTemplateUpdate() {
+            if (!this.isOnline || !this.config.SYNC_TOKEN) return;
+            try {
+                const path = `/api/v1/sync/template`;
+                const { signature, timestamp } = await this.generateSignature('GET', path);
+
+                const res = await fetch(`${this.config.API_BASE}/sync/template`, {
+                    headers: {
+                        'X-Sync-ID': this.config.LOCAL_ID,
+                        'X-Sync-Timestamp': timestamp,
+                        'X-Sync-Signature': signature,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (res.status === 200) {
+                    const data = await res.json();
+                    if (data.success && data.html) {
+                        const localTemplate = localStorage.getItem('pos_template');
+                        if (localTemplate !== data.html) {
+                            localStorage.setItem('pos_template', data.html);
+                            console.log("Nueva plantilla descargada.");
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn("No se pudo verificar la actualización de la plantilla:", e);
+            }
+        },
+
         async forceSync() {
             if (!this.isOnline || this.isSyncing || !this.config.SYNC_TOKEN) return;
             this.isSyncing = true;
+            await this.initDB();
+
             
             try {
                 const path = `/api/v1/sync/products`;
@@ -358,34 +607,75 @@ function posApp() {
                         'X-Sync-ID': this.config.LOCAL_ID,
                         'X-Sync-Timestamp': timestamp,
                         'X-Sync-Signature': signature,
+                        'X-Sync-Token': this.config.SYNC_TOKEN,
                         'Accept': 'application/json'
+
                     }
                 });
                 
                 const result = await res.json();
                 
-                if (result.success && this.db) {
-                    await this.db.execute("DELETE FROM products");
-                    for (const p of result.data) {
-                        try {
-                            await this.db.execute(
-                                "INSERT INTO products (id, nombre, sku, codigo_barra, precio_venta, stock, imagen, locale_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-                                [
-                                    p.id, 
-                                    p.nombre || '', 
-                                    p.sku || '', 
-                                    p.codigo_barra || '', 
-                                    p.precio_venta || 0, 
-                                    p.stock || 0, 
-                                    p.imagen || '', 
-                                    p.locale_id
-                                ]
-                            );
-                        } catch (sqlErr) {
-                            console.error("SQL Error con producto ID " + p.id + ":", sqlErr);
+                if (result.success) {
+                    if (this.db) {
+                        await this.db.execute("DELETE FROM products");
+                        for (const p of result.data) {
+                            try {
+                                await this.db.execute(
+                                    "INSERT INTO products (id, nombre, sku, codigo_barra, precio_venta, stock, imagen, locale_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+                                    [
+                                        p.id, 
+                                        p.nombre || '', 
+                                        p.sku || '', 
+                                        p.codigo_barra || '', 
+                                        p.precio_venta || 0, 
+                                        p.stock || 0, 
+                                        p.imagen || '', 
+                                        p.locale_id
+                                    ]
+                                );
+                            } catch (sqlErr) {
+                                console.error("SQL Error con producto ID " + p.id + ":", sqlErr);
+                            }
+                        }
+                        await this.loadLocalProducts();
+                    }
+
+                    // Respaldar productos en localStorage (Offline real)
+                    if (result.data && Array.isArray(result.data)) {
+                        localStorage.setItem('pos_products', JSON.stringify(result.data));
+                    }
+
+
+
+
+                    // Sincronización Automática de Ajustes y Cajas
+                    if (result.settings) {
+                        const isExpress = result.settings.cash_management_mode === 'express';
+                        this.config.IS_EXPRESS = isExpress;
+                        if (isExpress) {
+                            this.isShiftOpen = true;
                         }
                     }
-                    await this.loadLocalProducts();
+                    if (result.cajas && Array.isArray(result.cajas)) {
+                        this.availableCajas = result.cajas;
+                        localStorage.setItem('pos_cajas', JSON.stringify(this.availableCajas));
+                        
+                        if (this.config.IS_EXPRESS && this.availableCajas.length > 0) {
+                            this.config.CAJA_ID = this.availableCajas[0].id;
+                        }
+                    }
+                    if (result.users && Array.isArray(result.users)) {
+                        this.users = result.users;
+                        localStorage.setItem('pos_users', JSON.stringify(this.users));
+                    }
+                    if (result.locale_nombre) {
+                        this.config.LOCALE_NOMBRE = result.locale_nombre;
+                    }
+                    localStorage.setItem('pos_config', JSON.stringify(this.config));
+                    
+                    alert("¡Datos sincronizados con éxito!");
+
+
                 } else if (result.error) {
                     alert("Error servidor al sincronizar: " + result.error);
                     console.error("Sync error:", result.error);
@@ -443,6 +733,180 @@ function posApp() {
             } finally {
                 this.isSyncing = false;
             }
+        },
+
+        async printTicket() {
+            if (!this.config.PRINTER_NAME || !this.lastSale) return;
+
+            try {
+                const { invoke } = window.__TAURI__.tauri;
+                
+                // Comandos ESC/POS Básicos
+                const ESC = 0x1B;
+                const GS = 0x1D;
+                
+                let bytes = [
+                    ESC, 0x40, // Initialize
+                    ESC, 0x61, 0x01, // Center
+                    ESC, 0x45, 0x01, // Bold ON
+                    ...this.stringToBytes("INVENTARIO W\n"),
+                    ESC, 0x45, 0x00, // Bold OFF
+                    ...this.stringToBytes("Terminal de Ventas\n"),
+                    ...this.stringToBytes("--------------------------------\n"),
+                    ESC, 0x61, 0x00, // Left
+                    ...this.stringToBytes(`Ticket: ${this.lastSale.id}\n`),
+                    ...this.stringToBytes(`Fecha: ${new Date(this.lastSale.date).toLocaleString()}\n`),
+                    ...this.stringToBytes("--------------------------------\n"),
+                ];
+
+                // Items
+                this.lastSale.items.forEach(item => {
+                    const line = `${item.qty} x ${item.nombre.substring(0, 20)}\n`;
+                    const price = `   $${(item.precio_venta * item.qty).toFixed(2)}\n`;
+                    bytes.push(...this.stringToBytes(line));
+                    bytes.push(...this.stringToBytes(price));
+                });
+
+                bytes.push(
+                    ...this.stringToBytes("--------------------------------\n"),
+                    ESC, 0x61, 0x02, // Right
+                    ESC, 0x45, 0x01, // Bold ON
+                    ...this.stringToBytes(`TOTAL: $${this.lastSale.total.toFixed(2)}\n`),
+                    ESC, 0x45, 0x00, // Bold OFF
+                    0x0A, 0x0A, // Feed
+                    ESC, 0x61, 0x01, // Center
+                    ...this.stringToBytes("¡Gracias por su compra!\n"),
+                    0x0A, 0x0A, 0x0A, 0x0A, 0x0A, // Space for tear
+                    GS, 0x56, 0x41, 0x10 // Partial Cut
+                );
+
+                const result = await invoke('print_escpos', { 
+                    printerName: this.config.PRINTER_NAME, 
+                    content: bytes 
+                });
+                
+                console.log("Print result:", result);
+            } catch (e) {
+                console.error("Error al imprimir:", e);
+                alert("Fallo al imprimir ticket: " + e);
+            }
+        },
+
+        login() {
+            if (!this.loginSelectedUser) {
+                alert("Selecciona un usuario.");
+                return;
+            }
+            const user = this.users.find(u => u.id == this.loginSelectedUser);
+            if (user && user.pos_pin === this.loginPin) {
+                this.currentUser = user;
+                this.showLoginModal = false;
+                this.loginPin = '';
+                console.log(`Usuario ${user.name} autenticado.`);
+            } else {
+                alert("PIN Incorrecto.");
+                this.loginPin = '';
+            }
+        },
+
+        logout() {
+            this.currentUser = null;
+            this.showLoginModal = true;
+            this.loginPin = '';
+            this.loginSelectedUser = null;
+        },
+
+        stringToBytes(str) {
+
+            // Conversión simple a bytes (ASCII/Latin1)
+            const bytes = [];
+            for (let i = 0; i < str.length; i++) {
+                let code = str.charCodeAt(i);
+                // Mapeo básico para tildes y caracteres especiales (Codepage 850 aproximado o strip)
+                if (code > 127) code = 63; // Reemplazar con '?' si no es ASCII
+                bytes.push(code);
+            }
+            return bytes;
+        },
+
+        quickBills() {
+            const t = this.total();
+            if (t <= 0) return [];
+            const denominations = [1, 5, 10, 20, 50, 100, 200, 500, 1000];
+            const bills = new Set();
+            for (const d of denominations) {
+                const rounded = Math.ceil(t / d) * d;
+                if (rounded >= t) bills.add(rounded);
+                if (bills.size >= 5) break;
+            }
+            return [...bills].sort((a, b) => a - b).slice(0, 4);
+        },
+
+        getVueltoBreakdown(amount) {
+            if (!amount || amount <= 0) return [];
+            let remainingCents = Math.round(parseFloat(amount) * 100);
+            let breakdown = [];
+            const sortedDenoms = [100, 50, 20, 10, 5, 1, 0.25, 0.10, 0.05, 0.01].sort((a,b) => b - a);
+            for (const d of sortedDenoms) {
+                const dCents = Math.round(parseFloat(d) * 100);
+                const count = Math.floor(remainingCents / dCents);
+                if (count > 0) {
+                    breakdown.push({ label: this.fmt(d), val: d, count: count, isCoin: d < 1 });
+                    remainingCents -= count * dCents;
+                }
+            }
+            return breakdown;
+        },
+
+        fmt(v) {
+            return '$ ' + parseFloat(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        },
+        
+        saveSettings() {
+            localStorage.setItem('pos_config', JSON.stringify(this.config));
+            this.showSettings = false;
+            alert("Configuración guardada. Iniciando sincronización...");
+            this.forceSync();
+        },
+
+        handleImport() {
+            if (!this.importConfig) return;
+            try {
+                let clean = this.importConfig.trim();
+                let parsed = {};
+                if (clean.startsWith('{')) {
+                    parsed = JSON.parse(clean);
+                } else {
+                    const decoded = atob(clean);
+                    parsed = JSON.parse(decoded);
+                }
+                
+                if (parsed.api_url) this.config.API_BASE = parsed.api_url;
+                if (parsed.sucursal) {
+                    if (parsed.sucursal.sync_token) this.config.SYNC_TOKEN = parsed.sucursal.sync_token;
+                    if (parsed.sucursal.id) this.config.LOCAL_ID = parsed.sucursal.id;
+                    if (parsed.sucursal.nombre) this.config.LOCALE_NOMBRE = parsed.sucursal.nombre;
+                }
+
+                localStorage.setItem('pos_config', JSON.stringify(this.config));
+                this.importConfig = '';
+                alert("Configuración importada con éxito. Iniciando sincronización...");
+                this.forceSync();
+            } catch (err) {
+                alert("Error al importar configuración: " + err.message);
+            }
+        },
+
+
+        handleKey(e) {
+
+            if (e.key === 'F5') { e.preventDefault(); this.processPayment(); }
+            if (e.key === 'Escape') {
+                if (this.showSuccess) { this.showSuccess = false; }
+                else if (this.showSettings) { this.showSettings = false; }
+                else { this.searchQuery = ''; this.filteredProducts = [...this.products]; }
+            }
         }
     };
 }
+

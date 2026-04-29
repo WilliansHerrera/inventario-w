@@ -82,4 +82,9 @@ class ProductoResource extends ModelResource
         
         return response()->redirectTo(route('admin.products.barcode', ['ids' => $ids]));
     }
+
+    public function getTitle(): string
+    {
+        return __($this->title);
+    }
 }

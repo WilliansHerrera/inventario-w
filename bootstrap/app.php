@@ -12,11 +12,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->web(append: [
+            \App\Http\Middleware\SetRegionalSettings::class,
+        ]);
         $middleware->redirectTo(
             guests: '/login',
             users: '/'
         );
-        $middleware->append(\App\Http\Middleware\SetRegionalSettings::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

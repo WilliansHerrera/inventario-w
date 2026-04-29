@@ -65,4 +65,9 @@ class CompraDetalleResource extends ModelResource
             CompraDetalleDetailPage::class,
         ];
     }
+
+    public function getTitle(): string
+    {
+        return __($this->title);
+    }
 }

@@ -36,15 +36,14 @@ class CajaActionController extends Controller
                 return response()->json(['success' => true, 'message' => 'Jornada iniciada con éxito.']);
             }
 
-            return \MoonShine\Laravel\MoonShineJsonResponse::make()
-                ->toast('Jornada iniciada con éxito.', ToastType::SUCCESS)
-                ->redirect(route('moonshine.resource.page', ['resourceUri' => 'caja-resource', 'pageUri' => 'caja-index-page']));
+            MoonShineUI::toast('Jornada iniciada con éxito.', ToastType::SUCCESS);
+            return redirect(route('moonshine.resource.page', ['resourceUri' => 'caja-resource', 'pageUri' => 'caja-index-page']));
         } catch (\Exception $e) {
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'error' => $e->getMessage()], 422);
             }
-            return \MoonShine\Laravel\MoonShineJsonResponse::make()
-                ->toast($e->getMessage(), ToastType::ERROR);
+            MoonShineUI::toast($e->getMessage(), ToastType::ERROR);
+            return back();
         }
     }
 
@@ -66,15 +65,14 @@ class CajaActionController extends Controller
                 return response()->json(['success' => true, 'message' => 'Jornada cerrada con éxito.']);
             }
 
-            return \MoonShine\Laravel\MoonShineJsonResponse::make()
-                ->toast('Jornada cerrada con éxito.', ToastType::SUCCESS)
-                ->redirect(route('moonshine.resource.page', ['resourceUri' => 'caja-resource', 'pageUri' => 'caja-index-page']));
+            MoonShineUI::toast('Jornada cerrada con éxito.', ToastType::SUCCESS);
+            return redirect(route('moonshine.resource.page', ['resourceUri' => 'caja-resource', 'pageUri' => 'caja-index-page']));
         } catch (\Exception $e) {
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'error' => $e->getMessage()], 422);
             }
-            return \MoonShine\Laravel\MoonShineJsonResponse::make()
-                ->toast($e->getMessage(), ToastType::ERROR);
+            MoonShineUI::toast($e->getMessage(), ToastType::ERROR);
+            return back();
         }
     }
 
@@ -106,15 +104,14 @@ class CajaActionController extends Controller
                 return response()->json(['message' => 'Egreso registrado con éxito.']);
             }
 
-            return \MoonShine\Laravel\MoonShineJsonResponse::make()
-                ->toast('Egreso registrado.', ToastType::SUCCESS)
-                ->redirect(route('moonshine.resource.page', ['resourceUri' => 'caja-resource', 'pageUri' => 'caja-index-page']));
+            MoonShineUI::toast('Egreso registrado.', ToastType::SUCCESS);
+            return redirect(route('moonshine.resource.page', ['resourceUri' => 'caja-resource', 'pageUri' => 'caja-index-page']));
         } catch (\Exception $e) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['error' => $e->getMessage()], 422);
             }
-            return \MoonShine\Laravel\MoonShineJsonResponse::make()
-                ->toast($e->getMessage(), ToastType::ERROR);
+            MoonShineUI::toast($e->getMessage(), ToastType::ERROR);
+            return back();
         }
     }
 

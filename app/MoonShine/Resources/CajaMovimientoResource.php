@@ -38,4 +38,9 @@ class CajaMovimientoResource extends ModelResource
             'monto' => ['required', 'numeric'],
         ];
     }
+
+    public function getTitle(): string
+    {
+        return __($this->title);
+    }
 }

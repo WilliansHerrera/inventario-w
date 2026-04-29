@@ -55,13 +55,13 @@ class InventarioResource extends ModelResource
     {
         return [
             ActionButton::make(
-                'Imprimir',
+                __('Imprimir'),
                 fn(Inventario $item) => route('admin.products.barcode', $item->producto_id)
             )
             ->icon('qr-code')
             ->blank()
             ->primary()
-            ->customAttributes(['title' => 'Imprimir Código de Barras'])
+            ->customAttributes(['title' => __('Imprimir Código de Barras')])
         ];
     }
 
@@ -69,7 +69,7 @@ class InventarioResource extends ModelResource
     {
         return [
             ActionButton::make(
-                'Imprimir Código de Barras',
+                __('Imprimir Código de Barras'),
                 fn(Inventario $item) => route('admin.products.barcode', $item->producto_id)
             )
             ->icon('qr-code')
@@ -82,7 +82,7 @@ class InventarioResource extends ModelResource
     public function actions(): array
     {
         return [
-            ActionButton::make('Imprimir Seleccionados')
+            ActionButton::make(__('Imprimir Seleccionados'))
                 ->icon('qr-code')
                 ->blank()
                 ->primary()
@@ -96,5 +96,10 @@ class InventarioResource extends ModelResource
         $ids = $models->pluck('producto_id')->unique()->implode(',');
         
         return response()->redirectTo(route('admin.products.barcode', ['ids' => $ids]));
+    }
+
+    public function getTitle(): string
+    {
+        return __($this->title);
     }
 }

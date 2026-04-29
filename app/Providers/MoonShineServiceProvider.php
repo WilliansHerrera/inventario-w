@@ -56,6 +56,7 @@ class MoonShineServiceProvider extends ServiceProvider
                 \App\MoonShine\Pages\BackupPage::class,
                 \App\MoonShine\Pages\SystemUpdatePage::class,
                 \App\MoonShine\Pages\BarcodePrintingPage::class,
+                \App\MoonShine\Pages\ResetPage::class,
             ])
         ;
     }

@@ -35,4 +35,9 @@ class ProveedorResource extends ModelResource
             ProveedorDetailPage::class,
         ];
     }
+
+    public function getTitle(): string
+    {
+        return __($this->title);
+    }
 }

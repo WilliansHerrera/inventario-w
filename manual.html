@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual de Usuario - Sistema Multi-Idioma</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f8fafc;
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        header {
+            background: var(--bg-gradient);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            letter-spacing: -0.03em;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            font-size: 1.25rem;
+            color: #cbd5e1;
+            font-weight: 300;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: -3rem auto 4rem;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 20;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 3rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            color: var(--primary-dark);
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--primary);
+            padding-left: 1rem;
+            font-weight: 700;
+        }
+
+        p {
+            margin-bottom: 1.5rem;
+            font-size: 1.05rem;
+            color: var(--text-main);
+        }
+
+        ul, ol {
+            margin-bottom: 1.5rem;
+            padding-left: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.75rem;
+            color: var(--text-main);
+        }
+
+        .badge {
+            background: #e0e7ff;
+            color: var(--primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .note {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .note h4 {
+            color: #166534;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .btn-print {
+            display: block;
+            width: max-content;
+            margin: 2rem auto 0;
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 9999px;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-print:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        @media print {
+            .btn-print { display: none; }
+            .container { margin-top: 2rem; }
+            header { padding: 2rem; }
+            header h1 { -webkit-text-fill-color: var(--primary); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-content">
+            <h1>Manual del Módulo de Idiomas</h1>
+            <p>Guía de Operación y Administración del Sistema Multi-Idioma</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2>1. Introducción</h2>
+            <p>Este manual detalla el uso del soporte multi-idioma para el software de gestión Inventario-W. El sistema se encuentra habilitado para operar fluidamente en:</p>
+            <span class="badge">Español (ES)</span>
+            <span class="badge">English (EN)</span>
+            <span class="badge">Français (FR)</span>
+            <span class="badge">Português (PT)</span>
+        </div>
+
+        <div class="card">
+            <h2>2. Selección de Idioma en el POS</h2>
+            <p>Para modificar la localización lingüística en tiempo real durante el uso de la terminal de Punto de Venta:</p>
+            <ol>
+                <li>Ubique la barra de parámetros en la parte superior derecha.</li>
+                <li>Añada el parámetro `_lang` en su URL (ejemplo: `?_lang=en` para Inglés, `?_lang=fr` para Francés).</li>
+                <li>El sistema cambiará de forma instantánea toda la información correspondiente.</li>
+            </ol>
+            <div class="note">
+                <h4>💡 Importante</h4>
+                <p>La selección del lenguaje afecta a botones analíticos, alertas de caja, recibos térmicos de facturación y reportes financieros.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>3. Impresión a PDF/Word</h2>
+            <p>Puede exportar este manual digital a formato físico o electrónico mediante las opciones de su navegador:</p>
+            <ul>
+                <li><strong>A PDF:</strong> Haga clic en el botón inferior "Imprimir Manual", elija la impresora "Guardar como PDF".</li>
+                <li><strong>A Word:</strong> Copie la información visible y péguela directamente sobre un archivo en blanco de Microsoft Word.</li>
+            </ul>
+            <button onclick="window.print()" class="btn-print">🖨️ Imprimir Manual</button>
+        </div>
+    </div>
+
+</body>
+</html>

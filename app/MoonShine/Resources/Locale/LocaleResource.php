@@ -55,4 +55,9 @@ class LocaleResource extends ModelResource
 
         ];
     }
+
+    public function getTitle(): string
+    {
+        return __($this->title);
+    }
 }

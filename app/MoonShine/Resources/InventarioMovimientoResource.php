@@ -49,4 +49,9 @@ class InventarioMovimientoResource extends ModelResource
             'motivo' => ['nullable', 'string'],
         ];
     }
+
+    public function getTitle(): string
+    {
+        return __($this->title);
+    }
 }

@@ -79,4 +79,9 @@ class GlobalSettingResource extends ModelResource
     {
         return [];
     }
+
+    public function getTitle(): string
+    {
+        return __($this->title);
+    }
 }

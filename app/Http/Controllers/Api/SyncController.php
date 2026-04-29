@@ -86,11 +86,32 @@ class SyncController extends Controller
             ];
         });
 
+        $settings = [];
+        $cajas = [];
+        $localeNombre = 'Establecimiento General';
+        if ($localeId) {
+            $locale = \App\Models\Locale::find($localeId);
+            if ($locale) {
+                $config = $locale->getConfigArray();
+                $settings = $config['settings'] ?? [];
+                $cajas = $config['cajas'] ?? [];
+                $localeNombre = $locale->nombre;
+            }
+        }
+
+        $users = \MoonShine\Laravel\Models\MoonshineUser::select('id', 'name', 'pos_pin')->get();
+
+
         return response()->json([
             'success' => true,
             'data'    => $data,
-            'count'   => $data->count()
+            'count'   => $data->count(),
+            'settings'=> $settings,
+            'cajas'   => $cajas,
+            'users'   => $users,
+            'locale_nombre' => $localeNombre
         ]);
+
     }
 
     /**
@@ -173,4 +194,114 @@ class SyncController extends Controller
             'errors'     => $errors
         ]);
     }
+
+    /**
+     * Get the current status of the shift for a Caja.
+     */
+    public function shiftStatus(Request $request)
+    {
+        $cajaId = $request->query('caja_id');
+        if (!$cajaId) {
+            return response()->json(['error' => 'caja_id is required'], 400);
+        }
+
+        $caja = Caja::find($cajaId);
+        if (!$caja) {
+            return response()->json(['error' => 'Caja no encontrada'], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'abierta' => (bool)$caja->abierta,
+            'nombre'  => $caja->nombre,
+        ]);
+    }
+
+    /**
+     * Open a shift from the POS terminal.
+     */
+    public function shiftOpen(Request $request)
+    {
+        $request->validate([
+            'caja_id' => 'required|exists:cajas,id',
+            'monto_apertura' => 'required|numeric|min:0',
+        ]);
+
+        $caja = Caja::findOrFail($request->caja_id);
+        
+        if ($caja->abierta) {
+            return response()->json(['error' => 'La caja ya está abierta'], 400);
+        }
+
+        try {
+            DB::transaction(function () use ($caja, $request) {
+                $this->cashService->openShift(
+                    caja: $caja,
+                    initialBalanceReal: (float)$request->monto_apertura,
+                    expectedBalance: (float)$request->monto_apertura
+                );
+            });
+            return response()->json(['success' => true, 'abierta' => true]);
+        } catch (\Exception $e) {
+            Log::error("Error opening shift from POS: " . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Close a shift from the POS terminal.
+     */
+    public function shiftClose(Request $request)
+    {
+        $request->validate([
+            'caja_id' => 'required|exists:cajas,id',
+            'monto_cierre' => 'required|numeric|min:0',
+            'denominaciones' => 'nullable|array'
+        ]);
+
+        $caja = Caja::findOrFail($request->caja_id);
+
+        if (!$caja->abierta) {
+            return response()->json(['error' => 'La caja ya está cerrada'], 400);
+        }
+
+        try {
+            DB::transaction(function () use ($caja, $request) {
+                $this->cashService->closeShift(
+                    caja: $caja,
+                    montoReal: (float)$request->monto_cierre,
+                    userId: null,
+                    denominaciones: $request->denominaciones ?? []
+                );
+            });
+            return response()->json(['success' => true, 'abierta' => false]);
+        } catch (\Exception $e) {
+            Log::error("Error closing shift from POS: " . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get the latest visual template for POS Offline.
+     */
+    public function template(Request $request)
+    {
+        $path = storage_path('app/public/pos/index.html');
+        
+        if (!file_exists($path)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'No hay plantilla offline disponible en el servidor.'
+            ], 404);
+        }
+
+        $html = file_get_contents($path);
+
+        return response()->json([
+            'success' => true,
+            'html'    => $html,
+            'updated_at' => filemtime($path)
+        ]);
+    }
 }
+
