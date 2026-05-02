@@ -3,8 +3,8 @@
  return [
     'showing' => 'Mostrando',
     'of' => 'de',
-    'to' => 'a',
+    'to' => 'até',
     'results' => 'resultados',
     'previous' => '&laquo; Anterior',
-    'next' => 'Siguiente &raquo;',
+    'next' => 'Próximo &raquo;',
  ];
