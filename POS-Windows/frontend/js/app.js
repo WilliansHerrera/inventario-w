@@ -306,6 +306,9 @@ function posApp() {
                 const data = await res.json();
                 if (data.success) {
                     this.isShiftOpen = data.abierta;
+                    if (!this.isShiftOpen && !this.config.IS_EXPRESS) {
+                        this.showShiftOpenModal = true;
+                    }
                 }
             } catch (e) {
                 console.error("Error checking shift status", e);

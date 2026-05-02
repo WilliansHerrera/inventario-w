@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\Caja;
 use App\Models\CajaMovimiento;
-use App\Models\User;
+use App\Models\CajaTurno;
 use Illuminate\Support\Facades\Auth;
 
 class CashRegisterService
@@ -15,14 +15,14 @@ class CashRegisterService
     /**
      * Open a cash register shift (Turno).
      */
-    public function openShift(\App\Models\Caja $caja, float $initialBalanceReal, ?float $expectedBalance = null, ?int $userId = null, ?array $denominaciones = null): void
+    public function openShift(Caja $caja, float $initialBalanceReal, ?float $expectedBalance = null, ?int $userId = null, ?array $denominaciones = null): void
     {
-        $userId = $userId ?? auth('moonshine')->id() ?? \Illuminate\Support\Facades\Auth::id() ?? 1;
+        $userId = $userId ?? auth()->id() ?? Auth::id() ?? 1;
         $expectedBalance = $expectedBalance ?? $initialBalanceReal; // Si no se provee, se asume que es igual
         $diferencia = $initialBalanceReal - $expectedBalance;
 
         // 1. Crear el registro del Turno con auditoría de apertura
-        $turno = \App\Models\CajaTurno::create([
+        $turno = CajaTurno::create([
             'caja_id' => $caja->id,
             'user_id' => $userId,
             'monto_apertura_esperado' => $expectedBalance,
@@ -41,28 +41,28 @@ class CashRegisterService
         ]);
 
         // 3. Registrar movimiento de apertura vinculado al turno
-        \App\Models\CajaMovimiento::create([
+        CajaMovimiento::create([
             'caja_id' => $caja->id,
             'user_id' => $userId,
             'caja_turno_id' => $turno->id,
             'tipo' => 'apertura',
             'monto' => $initialBalanceReal,
-            'descripcion' => 'Apertura de jornada. Fondo real: ' . format_currency($initialBalanceReal) . 
-                            ($diferencia != 0 ? ' (Diferencia: ' . format_currency($diferencia) . ')' : ''),
+            'descripcion' => 'Apertura de jornada. Fondo real: '.format_currency($initialBalanceReal).
+                            ($diferencia != 0 ? ' (Diferencia: '.format_currency($diferencia).')' : ''),
         ]);
     }
 
     /**
      * Close a cash register shift (Turno) with physical count (arqueo).
      */
-    public function closeShift(\App\Models\Caja $caja, float $montoReal, ?int $userId = null, ?array $denominaciones = null): void
+    public function closeShift(Caja $caja, float $montoReal, ?int $userId = null, ?array $denominaciones = null): void
     {
         $turno = $caja->turnoActivo;
-        if (!$turno) {
-            throw new \Exception("No hay un turno activo para cerrar en esta caja.");
+        if (! $turno) {
+            throw new \Exception('No hay un turno activo para cerrar en esta caja.');
         }
 
-        $userId = $userId ?? auth('moonshine')->id() ?? \Illuminate\Support\Facades\Auth::id() ?? 1;
+        $userId = $userId ?? auth()->id() ?? Auth::id() ?? 1;
         $montoEsperado = (float) $caja->saldo;
         $diferencia = $montoReal - $montoEsperado;
 
@@ -77,13 +77,13 @@ class CashRegisterService
         ]);
 
         // 2. Registrar movimiento de cierre vinculado al turno
-        \App\Models\CajaMovimiento::create([
+        CajaMovimiento::create([
             'caja_id' => $caja->id,
             'user_id' => $userId,
             'caja_turno_id' => $turno->id,
             'tipo' => 'cierre',
             'monto' => 0, // No altera el saldo, es solo informativo de arqueo
-            'descripcion' => "Cierre de jornada. Diferencia detectada: " . format_currency($diferencia),
+            'descripcion' => 'Cierre de jornada. Diferencia detectada: '.format_currency($diferencia),
         ]);
 
         // 3. Actualizar estado de la caja
@@ -97,13 +97,13 @@ class CashRegisterService
     /**
      * Register a movement (sale, expense, etc.) in the cash register.
      */
-    public function registerMovement(\App\Models\Caja $caja, string $tipo, float $monto, string $descripcion = '', ?int $userId = null, ?int $categoria_id = null): void
+    public function registerMovement(Caja $caja, string $tipo, float $monto, string $descripcion = '', ?int $userId = null, ?int $categoria_id = null): void
     {
         $caja->increment('saldo', $monto);
 
-        \App\Models\CajaMovimiento::create([
+        CajaMovimiento::create([
             'caja_id' => $caja->id,
-            'user_id' => $userId ?? auth('moonshine')->id() ?? \Illuminate\Support\Facades\Auth::id() ?? 1,
+            'user_id' => $userId ?? auth()->id() ?? Auth::id() ?? 1,
             'caja_turno_id' => $caja->turno_activo_id, // Note: Use the current active ID
             'categoria_id' => $categoria_id,
             'tipo' => $tipo,
@@ -116,13 +116,13 @@ class CashRegisterService
      * Ensures a shift is open if auto_open_shifts is enabled.
      * FIX: Respects both Global and Caja settings.
      */
-    public function ensureOpenShift(\App\Models\Caja $caja): void
+    public function ensureOpenShift(Caja $caja): void
     {
         // Solo abrir si AMBOS están de acuerdo en apertura automática, o si el global es el único disponible
         $globalAutoOpen = (bool) get_global_setting('auto_open_shifts', false);
         $cajaAutoOpen = (bool) $caja->apertura_automatica_pos;
 
-        if (!$caja->abierta && $globalAutoOpen && $cajaAutoOpen) {
+        if (! $caja->abierta && $globalAutoOpen && $cajaAutoOpen) {
             $montoInicio = (float) get_global_setting('default_opening_amount', 50.0);
             $this->openShift($caja, $montoInicio, $montoInicio);
         }

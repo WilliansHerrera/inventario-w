@@ -4,29 +4,29 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\GlobalSetting\Pages;
 
-use MoonShine\Laravel\Pages\Crud\IndexPage;
-use MoonShine\Contracts\UI\FieldContract;
 use App\MoonShine\Resources\GlobalSetting\GlobalSettingResource;
-use MoonShine\UI\Fields\Select;
-use MoonShine\UI\Fields\Text;
-use MoonShine\UI\Fields\ID;
-use MoonShine\ColorManager\Palettes\PurplePalette;
 use MoonShine\ColorManager\Palettes\CyanPalette;
+use MoonShine\ColorManager\Palettes\GrayPalette;
 use MoonShine\ColorManager\Palettes\GreenPalette;
-use MoonShine\ColorManager\Palettes\YellowPalette;
+use MoonShine\ColorManager\Palettes\HalloweenPalette;
+use MoonShine\ColorManager\Palettes\LimePalette;
+use MoonShine\ColorManager\Palettes\NeutralPalette;
 use MoonShine\ColorManager\Palettes\OrangePalette;
 use MoonShine\ColorManager\Palettes\PinkPalette;
+use MoonShine\ColorManager\Palettes\PurplePalette;
+use MoonShine\ColorManager\Palettes\RetroPalette;
 use MoonShine\ColorManager\Palettes\RosePalette;
 use MoonShine\ColorManager\Palettes\SkyPalette;
-use MoonShine\ColorManager\Palettes\TealPalette;
-use MoonShine\ColorManager\Palettes\GrayPalette;
-use MoonShine\ColorManager\Palettes\NeutralPalette;
-use MoonShine\ColorManager\Palettes\LimePalette;
-use MoonShine\ColorManager\Palettes\HalloweenPalette;
-use MoonShine\ColorManager\Palettes\RetroPalette;
 use MoonShine\ColorManager\Palettes\SpringPalette;
+use MoonShine\ColorManager\Palettes\TealPalette;
 use MoonShine\ColorManager\Palettes\ValentinePalette;
 use MoonShine\ColorManager\Palettes\WinterPalette;
+use MoonShine\ColorManager\Palettes\YellowPalette;
+use MoonShine\Contracts\UI\FieldContract;
+use MoonShine\Laravel\Pages\Crud\IndexPage;
+use MoonShine\UI\Fields\ID;
+use MoonShine\UI\Fields\Select;
+use MoonShine\UI\Fields\Text;
 
 /**
  * @extends IndexPage<GlobalSettingResource>

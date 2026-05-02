@@ -1,4 +1,12 @@
+@php
+    $mode = get_global_setting('cash_management_mode', 'express');
+    $firstCaja = \App\Models\Caja::first();
+@endphp
 <script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
 <script>
     tailwind.config = {
         theme: {
@@ -51,6 +59,14 @@
     @keydown.window="handleKey($event)"
     class="flex flex-col w-full bg-slate-50 text-slate-800 h-screen overflow-hidden font-[Inter,sans-serif]"
 >
+    {{-- Native Bridge Loader (Tauri) --}}
+    <script>
+        if (window.__TAURI__) {
+            const script = document.createElement('script');
+            script.src = 'http://localhost/Inventario-w/POS-Windows/frontend/js/pos-bridge.js';
+            document.head.appendChild(script);
+        }
+    </script>
     {{-- Audio para feedback Premium --}}
     <audio x-ref="scanSound" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTtvT19vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb09vT29Pb08="></audio>
     {{-- ══════════════════════════════════════ --}}
@@ -61,27 +77,18 @@
         {{-- Brand --}}
         <div class="flex items-center gap-3 select-none shrink-0">
             @php
-                $paletteClass = get_global_setting('theme_palette', \MoonShine\ColorManager\Palettes\PurplePalette::class);
-                $colorName = strtolower(str_replace(['MoonShine\ColorManager\Palettes\\', 'Palette'], '', $paletteClass));
-                $logoFile = "logo-{$colorName}-small.svg";
-                if (!file_exists(public_path("vendor/moonshine/{$logoFile}"))) {
-                    $logoFile = 'logo-small.svg';
-                }
-                $logoUrl = asset("vendor/moonshine/{$logoFile}");
+                $logoUrl = route('branding.logo');
             @endphp
-            <div class="w-10 h-10 shrink-0 p-1 bg-slate-800 rounded-xl shadow-lg border border-slate-700 flex items-center justify-center overflow-hidden">
-                <img src="{{ $logoUrl }}" alt="Logo" class="w-8 h-8 object-contain">
-            </div>
-            <div class="hidden sm:block">
-                <p class="font-black text-sm tracking-tighter uppercase italic">Inventario-W</p>
-                <p class="text-[10px] text-indigo-300 font-bold uppercase tracking-widest leading-none">{{ __('Terminal POS v2.0') }}</p>
+            <div class="h-10 shrink-0 flex items-center justify-center overflow-hidden">
+                <img src="{{ $logoUrl }}" alt="Logo" class="h-10 w-auto object-contain">
             </div>
         </div>
 
         {{-- Spacer --}}
         <div class="flex-1"></div>
 
-        {{-- Caja selector (Refined) --}}
+        {{-- Caja selector (Refined) - Hidden in Express Mode --}}
+        @if($mode === 'industrial')
         <div class="relative" x-data="{ open: false }" @click.away="open = false">
             <button
                 @click="open = !open"
@@ -141,6 +148,16 @@
                 </div>
             </div>
         </div>
+        @else
+        {{-- En modo Express, solo mostramos el nombre de la caja de forma estática --}}
+        <div class="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-800/50 border border-slate-700/50">
+             <div class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </div>
+            <span class="text-xs font-bold text-slate-300 tracking-wide uppercase" x-text="cajaNombre"></span>
+        </div>
+        @endif
 
         {{-- Botón Salir --}}
         <a href="{{ route('moonshine.index') }}" class="w-10 h-10 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center hover:border-indigo-500 text-slate-400 hover:text-white transition-all shadow-md active:scale-95" title="{{ __('Salir al Panel') }}">
@@ -210,9 +227,22 @@
                             class="group relative bg-white border border-slate-200 rounded-2xl p-4 text-left transition-all duration-200 hover:shadow-xl hover:border-indigo-200 active:scale-95"
                         >
                             {{-- Batch/Stock Info --}}
-                            <div class="absolute top-2 right-2 z-10">
-                                <span class="bg-white/90 backdrop-blur-sm shadow-sm border border-slate-100 text-[9px] font-black px-2 py-0.5 rounded-full text-slate-500 uppercase tracking-tighter"
+                            <div class="absolute top-2 right-2 z-10 flex flex-col items-end gap-1">
+                                <span :class="p.stock > 0 ? 'bg-indigo-500 text-white shadow-indigo-200' : 'bg-rose-500 text-white shadow-rose-200'"
+                                      class="shadow-lg text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-tighter"
                                       x-text="p.stock + ' Uds'"></span>
+                                
+                                {{-- Otros Stocks (Industrial) --}}
+                                @if($mode === 'industrial')
+                                <template x-if="p.other_stocks && p.other_stocks.length > 0">
+                                    <div class="flex flex-col gap-1 items-end">
+                                        <template x-for="os in p.other_stocks" :key="os.sucursal">
+                                            <span class="bg-slate-100 text-slate-500 text-[8px] font-bold px-1.5 py-0.5 rounded-md border border-slate-200 whitespace-nowrap"
+                                                  x-text="os.sucursal + ': ' + os.stock"></span>
+                                        </template>
+                                    </div>
+                                </template>
+                                @endif
                             </div>
 
                             <div class="w-full aspect-square rounded-xl mb-3 overflow-hidden flex items-center justify-center relative group-hover:brightness-95 transition-all">
@@ -592,6 +622,7 @@
             <div class="p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200">
                 
                 {{-- Shift Summary (Only for Cierre) --}}
+                @if($mode === 'industrial')
                 <div x-show="auditType === 'cierre'" class="mb-6">
                     <div x-show="isSummaryLoading" class="flex flex-col items-center justify-center py-4 text-slate-400 gap-2 animate-pulse bg-slate-50 rounded-2xl border border-slate-100 italic">
                         <span class="text-[9px] font-black uppercase tracking-widest">{{ __('Calculando balances...') }}</span>
@@ -601,24 +632,41 @@
                         <h4 class="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-3 border-b border-white/5 pb-2">{{ __('Estado de Caja Actual') }}</h4>
                         <div class="space-y-2 text-xs">
                             <div class="flex justify-between items-center text-slate-300">
-                                <span class="font-medium opacity-60">{{ __('Ventas (+)') }}</span>
-                                <span class="font-black text-emerald-400" x-text="fmt(summary.ventas)"></span>
+                                <span class="font-medium opacity-60">{{ __('Fondo Inicial (+)') }}</span>
+                                <span class="font-bold opacity-80" x-text="fmt(summary.apertura)"></span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-300">
+                                <span class="font-medium opacity-60">{{ __('Ventas Efectivo (+)') }}</span>
+                                <span class="font-black text-emerald-400" x-text="fmt(summary.ventas_efectivo)"></span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-300">
+                                <span class="font-medium opacity-60">{{ __('Ventas Tarjeta') }}</span>
+                                <span class="font-black text-indigo-400" x-text="fmt(summary.ventas_tarjeta)"></span>
                             </div>
                             <div class="flex justify-between items-center text-slate-300">
                                 <span class="font-medium opacity-60">{{ __('Gastos (-)') }}</span>
                                 <span class="font-black text-rose-400" x-text="'- ' + fmt(summary.egresos)"></span>
                             </div>
-                            <div class="flex justify-between items-center text-slate-300">
-                                <span class="font-medium opacity-60">{{ __('Fondo Inicial') }}</span>
-                                <span class="font-bold opacity-80" x-text="fmt(summary.apertura)"></span>
-                            </div>
+                            
                             <div class="pt-2 mt-2 border-t border-white/10 flex justify-between items-center">
-                                <span class="text-[9px] font-black text-indigo-400 uppercase">{{ __('Debes Entregar:') }}</span>
+                                <span class="text-[9px] font-black text-indigo-400 uppercase">{{ __('Efectivo Esperado:') }}</span>
                                 <span class="text-lg font-black text-white font-mono tracking-tighter" x-text="fmt(summary.esperado)"></span>
                             </div>
+
+                            {{-- Comparativa en tiempo real --}}
+                            <template x-if="auditMonto > 0">
+                                <div class="pt-2 mt-2 border-t border-dashed border-white/10 flex justify-between items-center">
+                                    <span class="text-[9px] font-black uppercase" :class="auditMonto >= summary.esperado ? 'text-emerald-400' : 'text-rose-400'">
+                                        <span x-text="auditMonto >= summary.esperado ? '{{ __('Sobrante:') }}' : '{{ __('Faltante:') }}'"></span>
+                                    </span>
+                                    <span class="text-sm font-black tabular-nums" :class="auditMonto >= summary.esperado ? 'text-emerald-400' : 'text-rose-400'"
+                                          x-text="fmt(Math.abs(auditMonto - summary.esperado))"></span>
+                                </div>
+                            </template>
                         </div>
                     </div>
                 </div>
+                @endif
 
                 <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{{ __('Efectivo Físico en Caja') }}</label>
                 <div class="relative">
@@ -635,6 +683,7 @@
                     >
                 </div>
 
+                @if($mode === 'industrial')
                 {{-- Calculadora de Denominaciones --}}
                 <div class="mt-6 border-t border-slate-100 pt-6">
                     <div class="flex items-center justify-between mb-4">
@@ -704,6 +753,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
                 
                 <p x-show="auditType === 'apertura'" class="mt-4 text-[10px] text-slate-400 font-bold leading-relaxed px-2">
                     * {{ __('El sistema comparará este monto con el fondo asignado de') }} 
@@ -809,10 +859,6 @@
 </div>
 
 <script>
-@php
-    $mode = get_global_setting('cash_management_mode', 'express');
-    $firstCaja = \App\Models\Caja::first();
-@endphp
 
 function pos() {
     return {
@@ -838,6 +884,7 @@ function pos() {
 
         // GASTO MODAL
         showGastoModal: false,
+        gastoMonto: 0,
         gastoDescripcion: '',
         isAuditLoading: false,
         isSummaryLoading: false,
@@ -928,11 +975,7 @@ function pos() {
             this.auditMonto   = 0;
 
             if (!abierta) {
-                if (autoOpen) {
-                    this.autoAbrirCaja();
-                } else {
-                    this.openAuditModal('apertura');
-                }
+                this.openAuditModal('apertura');
             }
 
             this.init();
@@ -1024,6 +1067,10 @@ function pos() {
         },
 
         addItem(p) {
+            if (p.stock <= 0) {
+                this.flashError('{{ __('Sin existencias en esta caja.') }}' + (p.other_stocks?.length ? ' {{ __('Revisa otras sucursales.') }}' : ''));
+                return;
+            }
             const existing = this.cart.find(i => i.id === p.id);
             if (existing) {
                 if (existing.qty < p.stock) existing.qty++;

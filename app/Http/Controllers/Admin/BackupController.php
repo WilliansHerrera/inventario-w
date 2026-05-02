@@ -25,9 +25,9 @@ class BackupController extends Controller
         $result = $this->backupService->createBackup();
 
         if ($result['success']) {
-             MoonShineUI::toast('Copia de seguridad creada: ' . $result['filename'], ToastType::SUCCESS);
+            MoonShineUI::toast('Copia de seguridad creada: '.$result['filename'], ToastType::SUCCESS);
         } else {
-             MoonShineUI::toast($result['message'], ToastType::ERROR);
+            MoonShineUI::toast($result['message'], ToastType::ERROR);
         }
 
         return back();
@@ -39,9 +39,10 @@ class BackupController extends Controller
     public function restore(Request $request)
     {
         $filename = $request->input('filename');
-        
-        if (!$filename) {
+
+        if (! $filename) {
             MoonShineUI::toast('Archivo no especificado.', ToastType::ERROR);
+
             return back();
         }
 
@@ -62,9 +63,10 @@ class BackupController extends Controller
     public function delete(Request $request)
     {
         $filename = $request->input('filename');
-        
-        if (!$filename) {
+
+        if (! $filename) {
             MoonShineUI::toast('Archivo no especificado.', ToastType::ERROR);
+
             return back();
         }
 
@@ -84,7 +86,7 @@ class BackupController extends Controller
     {
         $path = $this->backupService->getBackupPath($filename);
 
-        if (!$path) {
+        if (! $path) {
             abort(404, 'Archivo no encontrado.');
         }
 

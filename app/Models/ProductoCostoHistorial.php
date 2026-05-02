@@ -2,17 +2,24 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use MoonShine\Laravel\Models\MoonshineUser;
 
 class ProductoCostoHistorial extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'producto_id',
         'compra_id',
         'user_id',
         'costo_anterior',
-        'costo_nuevo'
+        'costo_nuevo',
+    ];
+
+    protected $casts = [
+        'costo_anterior' => 'decimal:2',
+        'costo_nuevo' => 'decimal:2',
     ];
 
     public function producto()
@@ -27,6 +34,6 @@ class ProductoCostoHistorial extends Model
 
     public function user()
     {
-        return $this->belongsTo(MoonshineUser::class);
+        return $this->belongsTo(User::class);
     }
 }

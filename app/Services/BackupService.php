@@ -8,18 +8,24 @@ use Illuminate\Support\Facades\Log;
 class BackupService
 {
     protected string $backupPath;
+
     protected string $mysqlPath = 'C:\\xampp\\mysql\\bin\\';
+
     protected string $dbHost;
+
     protected string $dbPort;
+
     protected string $dbName;
+
     protected string $dbUser;
+
     protected string $dbPass;
 
     public function __construct()
     {
         $this->backupPath = storage_path('app/backups');
-        
-        if (!File::exists($this->backupPath)) {
+
+        if (! File::exists($this->backupPath)) {
             File::makeDirectory($this->backupPath, 0755, true);
         }
 
@@ -35,19 +41,20 @@ class BackupService
      */
     public function createBackup(): array
     {
-        $filename = "backup_" . date('Y-m-d_H-i-s') . ".sql";
-        $filePath = $this->backupPath . DIRECTORY_SEPARATOR . $filename;
+        $filename = 'backup_'.date('Y-m-d_H-i-s').'.sql';
+        $filePath = $this->backupPath.DIRECTORY_SEPARATOR.$filename;
 
         // Construir comando mysqldump
         // mysqldump -h host -P port -u user -pPass dbname > file.sql
-        $passwordPart = $this->dbPass ? "-p\"{$this->dbPass}\"" : "";
+        $passwordPart = $this->dbPass ? "-p\"{$this->dbPass}\"" : '';
         $command = "\"{$this->mysqlPath}mysqldump.exe\" --no-tablespaces -h {$this->dbHost} -P {$this->dbPort} -u {$this->dbUser} {$passwordPart} {$this->dbName} > \"{$filePath}\" 2>&1";
 
         exec($command, $output, $resultCode);
 
         if ($resultCode !== 0) {
-            Log::error("Backup failed: " . implode("\n", $output));
-            return ['success' => false, 'message' => 'Error al crear el backup: ' . implode(" ", $output)];
+            Log::error('Backup failed: '.implode("\n", $output));
+
+            return ['success' => false, 'message' => 'Error al crear el backup: '.implode(' ', $output)];
         }
 
         return ['success' => true, 'filename' => $filename];
@@ -58,22 +65,23 @@ class BackupService
      */
     public function restoreBackup(string $filename): array
     {
-        $filePath = $this->backupPath . DIRECTORY_SEPARATOR . $filename;
+        $filePath = $this->backupPath.DIRECTORY_SEPARATOR.$filename;
 
-        if (!File::exists($filePath)) {
+        if (! File::exists($filePath)) {
             return ['success' => false, 'message' => 'El archivo de backup no existe.'];
         }
 
         // Construir comando mysql
         // mysql -h host -P port -u user -pPass dbname < file.sql
-        $passwordPart = $this->dbPass ? "-p\"{$this->dbPass}\"" : "";
+        $passwordPart = $this->dbPass ? "-p\"{$this->dbPass}\"" : '';
         $command = "\"{$this->mysqlPath}mysql.exe\" -h {$this->dbHost} -P {$this->dbPort} -u {$this->dbUser} {$passwordPart} {$this->dbName} < \"{$filePath}\" 2>&1";
 
         exec($command, $output, $resultCode);
 
         if ($resultCode !== 0) {
-            Log::error("Restore failed: " . implode("\n", $output));
-            return ['success' => false, 'message' => 'Error al restaurar el backup: ' . implode(" ", $output)];
+            Log::error('Restore failed: '.implode("\n", $output));
+
+            return ['success' => false, 'message' => 'Error al restaurar el backup: '.implode(' ', $output)];
         }
 
         return ['success' => true, 'message' => 'Base de datos restaurada correctamente.'];
@@ -91,15 +99,15 @@ class BackupService
             if ($file->getExtension() === 'sql') {
                 $backups[] = [
                     'filename' => $file->getFilename(),
-                    'size' => round($file->getSize() / 1024 / 1024, 2) . ' MB',
+                    'size' => round($file->getSize() / 1024 / 1024, 2).' MB',
                     'date' => date('d/m/Y H:i:s', $file->getMTime()),
-                    'timestamp' => $file->getMTime()
+                    'timestamp' => $file->getMTime(),
                 ];
             }
         }
 
         // Ordenar por fecha descendente
-        usort($backups, fn($a, $b) => $b['timestamp'] <=> $a['timestamp']);
+        usort($backups, fn ($a, $b) => $b['timestamp'] <=> $a['timestamp']);
 
         return $backups;
     }
@@ -109,7 +117,7 @@ class BackupService
      */
     public function deleteBackup(string $filename): bool
     {
-        $filePath = $this->backupPath . DIRECTORY_SEPARATOR . $filename;
+        $filePath = $this->backupPath.DIRECTORY_SEPARATOR.$filename;
 
         if (File::exists($filePath)) {
             return File::delete($filePath);
@@ -123,7 +131,8 @@ class BackupService
      */
     public function getBackupPath(string $filename): ?string
     {
-        $filePath = $this->backupPath . DIRECTORY_SEPARATOR . $filename;
+        $filePath = $this->backupPath.DIRECTORY_SEPARATOR.$filename;
+
         return File::exists($filePath) ? $filePath : null;
     }
 }

@@ -7,61 +7,27 @@ use App\Models\Inventario;
 use App\Models\InventarioMovimiento;
 use App\Models\ProductoCostoHistorial;
 use Illuminate\Support\Facades\DB;
+use MoonShine\Laravel\MoonShineAuth;
 
 class CompraService
 {
-    public function procesarCompra(Compra $compra)
+    public function processPurchase(Compra $compra)
     {
         if ($compra->estado === 'completada') {
-            throw new \Exception("La compra ya se encuentra completada.");
+            throw new \Exception('La compra ya se encuentra completada.');
         }
 
         DB::beginTransaction();
 
         try {
-            foreach ($compra->detalles as $detalle) {
-                // 1. Alimentar Inventario
-                $inventario = Inventario::firstOrCreate(
-                    [
-                        'producto_id' => $detalle->producto_id,
-                        'locale_id' => $compra->locale_id,
-                    ],
-                    ['stock' => 0]
-                );
+            // NOTE: Product cost and Inventory stock are now automatically updated 
+            // via the model observers in CompraDetalle, Producto, and Inventario models.
+            // This service now only handles the high-level purchase completion state.
 
-                $inventario->stock += $detalle->cantidad;
-                $inventario->save();
+            // Ensure totals are correct one last time
+            $compra->recalculateTotals();
 
-                // 2. Registrar Movimiento
-                InventarioMovimiento::create([
-                    'inventario_id' => $inventario->id,
-                    'user_id' => $compra->user_id,
-                    'cantidad' => $detalle->cantidad,
-                    'tipo' => 'compra',
-                    'motivo' => 'Recepción de compra N° ' . ($compra->nro_documento ?: $compra->id)
-                ]);
-
-                // 3. Actualizar Costo del Producto y dejar Historial
-                $producto = $detalle->producto;
-                $costoAnterior = $producto->precio; // precio = costo base en catálogo
-                
-                if (floatval($costoAnterior) !== floatval($detalle->costo_unitario)) {
-                    // Guardar Historial
-                    ProductoCostoHistorial::create([
-                        'producto_id' => $producto->id,
-                        'compra_id' => $compra->id,
-                        'user_id' => \MoonShine\Laravel\MoonShineAuth::getGuard()->id() ?? $compra->user_id,
-                        'costo_anterior' => $costoAnterior,
-                        'costo_nuevo' => $detalle->costo_unitario
-                    ]);
-
-                    // Actualizar costo base
-                    $producto->precio = $detalle->costo_unitario;
-                    $producto->save();
-                }
-            }
-
-            // Marcar Compra como completada
+            // Mark Compra as completed
             $compra->estado = 'completada';
             $compra->save();
 

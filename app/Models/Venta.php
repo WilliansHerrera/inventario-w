@@ -2,16 +2,23 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Venta extends Model
 {
-    protected $fillable = ['caja_id', 'user_id', 'total', 'metodo_pago'];
+    use HasFactory;
 
-    public function detalles()
-    {
-        return $this->hasMany(VentaDetalle::class);
-    }
+    protected $fillable = [
+        'caja_id',
+        'user_id',
+        'total',
+        'metodo_pago',
+    ];
+
+    protected $casts = [
+        'total' => 'decimal:2',
+    ];
 
     public function caja()
     {
@@ -20,6 +27,11 @@ class Venta extends Model
 
     public function user()
     {
-        return $this->belongsTo(\MoonShine\Laravel\Models\MoonshineUser::class, 'user_id');
+        return $this->belongsTo(User::class);
+    }
+
+    public function detalles()
+    {
+        return $this->hasMany(VentaDetalle::class);
     }
 }

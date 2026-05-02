@@ -22,6 +22,25 @@ yarn-error.log
 /.vscode
 /.zed
 
-# Build artifacts
-*.exe
-/dist/
+# AI and Agent folders
+.agents/
+.ai/
+.gemini/
+GEMINI.md
+boost.json
+skills/
+
+# Temporary scripts
+check_users*.php
+clean_dark_logos.php
+fetch_sample.php
+fix_logos.php
+generate_light_logos.php
+import_products.php
+migrate_users.php
+regenerate_logos.php
+reset_password.php
+update_logo_text_only.php
+test_output.txt
+vtex_sample.json
+scratch/

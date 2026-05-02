@@ -31,8 +31,9 @@ class BarcodeController extends Controller
         // Si se pasan IDs por query string (bulk)
         if ($productos->isEmpty() && $request->has('ids')) {
             $ids = is_array($request->ids) ? $request->ids : explode(',', $request->ids);
-            $productos = Producto::whereIn('id', $ids)->get()->map(function($p) {
+            $productos = Producto::whereIn('id', $ids)->get()->map(function ($p) {
                 $p->print_quantity = 1;
+
                 return $p;
             });
         }
@@ -42,7 +43,7 @@ class BarcodeController extends Controller
         }
 
         // Filtrar productos sin código de barras
-        $validProductos = $productos->filter(fn($p) => !empty($p->codigo_barra));
+        $validProductos = $productos->filter(fn ($p) => ! empty($p->codigo_barra));
 
         if ($validProductos->isEmpty()) {
             return back()->with('toast', ['type' => 'error', 'message' => 'Los productos seleccionados no tienen códigos de barras asignados.']);
@@ -50,7 +51,7 @@ class BarcodeController extends Controller
 
         return view('admin.products.barcode', [
             'productos' => $validProductos,
-            'store_name' => get_global_setting('receipt_header', 'Sistema de Inventario')
+            'store_name' => get_global_setting('receipt_header', 'Sistema de Inventario'),
         ]);
     }
 }

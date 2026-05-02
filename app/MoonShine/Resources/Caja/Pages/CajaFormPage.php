@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\Caja\Pages;
 
-use MoonShine\Laravel\Pages\Crud\FormPage;
-use MoonShine\Contracts\UI\FieldContract;
 use App\MoonShine\Resources\Caja\CajaResource;
-use MoonShine\UI\Fields\Text;
-use MoonShine\UI\Fields\Number;
-use MoonShine\UI\Fields\Switcher;
 use App\MoonShine\Resources\Locale\LocaleResource;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
+use MoonShine\Laravel\Pages\Crud\FormPage;
+use MoonShine\UI\Fields\Number;
+use MoonShine\UI\Fields\Switcher;
+use MoonShine\UI\Fields\Text;
 
 /**
  * @extends FormPage<CajaResource>
@@ -28,7 +27,7 @@ class CajaFormPage extends FormPage
             Number::make('Saldo Initial', 'saldo')
                 ->required()
                 ->default(0)
-                ->hint(get_currency_symbol() . ' ' . get_global_setting('currency_code')),
+                ->hint(get_currency_symbol().' '.get_global_setting('currency_code')),
             Switcher::make('Abierta', 'abierta')->default(false),
             Switcher::make('Inc. Apertura Global', 'incluir_en_apertura_global')->default(true)
                 ->hint('Incluir en la apertura masiva de inicio de jornada.'),

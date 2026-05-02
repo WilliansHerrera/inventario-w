@@ -1,7 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
+use App\Models\User;
+use App\MoonShine\Layouts\MoonShineLayout;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
@@ -13,29 +18,32 @@ use MoonShine\Crud\Forms\LoginForm;
 use MoonShine\Laravel\Exceptions\MoonShineNotFoundException;
 use MoonShine\Laravel\Http\Middleware\Authenticate;
 use MoonShine\Laravel\Http\Middleware\ChangeLocale;
-use App\MoonShine\Layouts\AppLayout;
-use MoonShine\Laravel\Models\MoonshineUser;
-use MoonShine\Laravel\Pages\Dashboard;
 use MoonShine\Laravel\Pages\ErrorPage;
 use MoonShine\Laravel\Pages\LoginPage;
 use MoonShine\Laravel\Pages\ProfilePage;
 
 return [
-    'title' => env('MOONSHINE_TITLE', 'Inventario-W'),
-    'logo' => '/vendor/moonshine/logo.svg',
+    'title' => env('MOONSHINE_TITLE', 'MoonShine'),
+    'logo' => '/vendor/moonshine/logo-small.svg',
     'logo_small' => '/vendor/moonshine/logo-small.svg',
 
+    'favicons' => [
+        'apple-touch' => '/vendor/moonshine/apple-touch-icon.png',
+        '32' => '/vendor/moonshine/favicon-32x32.png',
+        '16' => '/vendor/moonshine/favicon-16x16.png',
+        'safari-pinned-tab' => '/vendor/moonshine/safari-pinned-tab.svg',
+    ],
 
     // Default flags
-    'use_migrations' => true,
+    'use_migrations' => false,
     'use_notifications' => true,
-    'use_database_notifications' => true,
+    'use_database_notifications' => false,
     'use_routes' => true,
     'use_profile' => true,
 
     // Routing
     'domain' => env('MOONSHINE_DOMAIN'),
-    'prefix' => env('MOONSHINE_ROUTE_PREFIX', ''),
+    'prefix' => env('MOONSHINE_ROUTE_PREFIX', 'admin'),
     'page_prefix' => env('MOONSHINE_PAGE_PREFIX', 'page'),
     'resource_prefix' => env('MOONSHINE_RESOURCE_PREFIX', 'resource'),
     'home_route' => 'moonshine.index',
@@ -45,6 +53,7 @@ return [
 
     // Middleware
     'middleware' => [
+        ConvertEmptyStringsToNull::class,
         EncryptCookies::class,
         AddQueuedCookiesToResponse::class,
         StartSession::class,
@@ -53,6 +62,7 @@ return [
         VerifyCsrfToken::class,
         SubstituteBindings::class,
         ChangeLocale::class,
+        \App\Http\Middleware\ApplyGlobalSettings::class,
     ],
 
     // Storage
@@ -63,8 +73,8 @@ return [
     // Authentication and profile
     'auth' => [
         'enabled' => true,
-        'guard' => 'moonshine',
-        'model' => MoonshineUser::class,
+        'guard' => 'web',
+        'model' => User::class,
         'middleware' => [
             Authenticate::class,
         ],
@@ -80,8 +90,8 @@ return [
     ],
 
     // Layout, palette, pages, forms
-    'layout' => App\MoonShine\Layouts\MoonShineLayout::class,
-    'palette' => MoonShine\ColorManager\Palettes\PurplePalette::class,
+    'layout' => MoonShineLayout::class,
+    'palette' => PurplePalette::class,
 
     'forms' => [
         'login' => LoginForm::class,
@@ -91,7 +101,7 @@ return [
     'pages' => [
         'dashboard' => App\MoonShine\Pages\Dashboard::class,
         'profile' => ProfilePage::class,
-        'login' => \App\MoonShine\Pages\CustomLoginPage::class,
+        'login' => App\MoonShine\Pages\CustomLoginPage::class,
         'error' => ErrorPage::class,
     ],
 
@@ -101,7 +111,7 @@ return [
     'locales' => [
         'es' => 'Español',
         'en' => 'English',
+        'fr' => 'Français',
         'pt' => 'Português',
-        'fr' => 'Français'
     ],
 ];

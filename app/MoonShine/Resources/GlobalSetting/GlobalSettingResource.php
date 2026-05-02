@@ -5,30 +5,15 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources\GlobalSetting;
 
 use App\Models\GlobalSetting;
-use MoonShine\Laravel\Resources\ModelResource;
-use MoonShine\UI\Fields\Select;
-use MoonShine\UI\Fields\Text;
-use MoonShine\Contracts\UI\FieldContract;
+use MoonShine\Contracts\Core\DependencyInjection\FieldsContract;
 use MoonShine\Contracts\Core\PageContract;
-use MoonShine\Support\ListOf;
+use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
+use MoonShine\Contracts\UI\FieldContract;
+use MoonShine\Laravel\MoonShineUI;
+use MoonShine\Laravel\Resources\ModelResource;
 use MoonShine\Support\Enums\Action;
-use MoonShine\ColorManager\Palettes\PurplePalette;
-use MoonShine\ColorManager\Palettes\CyanPalette;
-use MoonShine\ColorManager\Palettes\GreenPalette;
-use MoonShine\ColorManager\Palettes\YellowPalette;
-use MoonShine\ColorManager\Palettes\OrangePalette;
-use MoonShine\ColorManager\Palettes\PinkPalette;
-use MoonShine\ColorManager\Palettes\RosePalette;
-use MoonShine\ColorManager\Palettes\SkyPalette;
-use MoonShine\ColorManager\Palettes\TealPalette;
-use MoonShine\ColorManager\Palettes\GrayPalette;
-use MoonShine\ColorManager\Palettes\NeutralPalette;
-use MoonShine\ColorManager\Palettes\LimePalette;
-use MoonShine\ColorManager\Palettes\HalloweenPalette;
-use MoonShine\ColorManager\Palettes\RetroPalette;
-use MoonShine\ColorManager\Palettes\SpringPalette;
-use MoonShine\ColorManager\Palettes\ValentinePalette;
-use MoonShine\ColorManager\Palettes\WinterPalette;
+use MoonShine\Support\Enums\ToastType;
+use MoonShine\Support\ListOf;
 
 /**
  * @extends ModelResource<GlobalSetting>
@@ -38,6 +23,8 @@ class GlobalSettingResource extends ModelResource
     protected string $model = GlobalSetting::class;
 
     protected string $title = 'Configuración Regional';
+    
+    protected bool $isAsync = false;
 
     protected function activeActions(): ListOf
     {
@@ -68,10 +55,15 @@ class GlobalSettingResource extends ModelResource
         return $this->getIndexPageUrl();
     }
 
-    protected function afterSave(\MoonShine\Contracts\Core\TypeCasts\DataWrapperContract $item, \MoonShine\Contracts\Core\DependencyInjection\FieldsContract $fields): \MoonShine\Contracts\Core\TypeCasts\DataWrapperContract
+    protected function afterSave(DataWrapperContract $item, FieldsContract $fields): DataWrapperContract
     {
-        \MoonShine\Laravel\MoonShineUI::toast('Configuración guardada exitosamente.', \MoonShine\Support\Enums\ToastType::SUCCESS);
+        \Illuminate\Support\Facades\Cache::forget('global_settings_v2');
         
+        $key = config('moonshine.locale_key', '_lang');
+        session()->forget($key);
+
+        MoonShineUI::toast('Configuración guardada exitosamente.', ToastType::SUCCESS);
+
         return $item;
     }
 

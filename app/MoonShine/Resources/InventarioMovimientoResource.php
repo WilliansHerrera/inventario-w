@@ -6,10 +6,10 @@ namespace App\MoonShine\Resources;
 
 use App\Models\InventarioMovimiento;
 use MoonShine\Laravel\Resources\ModelResource;
-use MoonShine\UI\Fields\ID;
-use MoonShine\UI\Fields\Text;
-use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Date;
+use MoonShine\UI\Fields\ID;
+use MoonShine\UI\Fields\Number;
+use MoonShine\UI\Fields\Text;
 
 /**
  * @extends ModelResource<InventarioMovimiento>
@@ -19,6 +19,11 @@ class InventarioMovimientoResource extends ModelResource
     protected string $model = InventarioMovimiento::class;
 
     protected string $title = 'Movimientos de Inventario';
+
+    public function search(): array
+    {
+        return ['id', 'tipo', 'motivo'];
+    }
 
     protected bool $isAsync = true;
 
@@ -30,7 +35,7 @@ class InventarioMovimientoResource extends ModelResource
                 ->format('d/m/Y H:i')
                 ->sortable(),
             Text::make('Tipo', 'tipo')
-                ->badge(fn($val) => match($val) {
+                ->badge(fn ($val) => match ($val) {
                     'venta', 'salida' => 'red',
                     'entrada', 'compra' => 'green',
                     default => 'gray'

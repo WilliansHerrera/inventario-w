@@ -4,30 +4,33 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\GlobalSetting\Pages;
 
-use MoonShine\Laravel\Pages\Crud\FormPage;
-use MoonShine\Contracts\UI\FieldContract;
 use App\MoonShine\Resources\GlobalSetting\GlobalSettingResource;
-use MoonShine\UI\Fields\Select;
-use MoonShine\UI\Fields\Text;
-use MoonShine\UI\Fields\ID;
-use MoonShine\UI\Fields\Switcher;
-use MoonShine\ColorManager\Palettes\PurplePalette;
 use MoonShine\ColorManager\Palettes\CyanPalette;
+use MoonShine\ColorManager\Palettes\GrayPalette;
 use MoonShine\ColorManager\Palettes\GreenPalette;
-use MoonShine\ColorManager\Palettes\YellowPalette;
+use MoonShine\ColorManager\Palettes\HalloweenPalette;
+use MoonShine\ColorManager\Palettes\LimePalette;
+use MoonShine\ColorManager\Palettes\NeutralPalette;
 use MoonShine\ColorManager\Palettes\OrangePalette;
 use MoonShine\ColorManager\Palettes\PinkPalette;
+use MoonShine\ColorManager\Palettes\PurplePalette;
+use MoonShine\ColorManager\Palettes\RetroPalette;
 use MoonShine\ColorManager\Palettes\RosePalette;
 use MoonShine\ColorManager\Palettes\SkyPalette;
-use MoonShine\ColorManager\Palettes\TealPalette;
-use MoonShine\ColorManager\Palettes\GrayPalette;
-use MoonShine\ColorManager\Palettes\NeutralPalette;
-use MoonShine\ColorManager\Palettes\LimePalette;
-use MoonShine\ColorManager\Palettes\HalloweenPalette;
-use MoonShine\ColorManager\Palettes\RetroPalette;
 use MoonShine\ColorManager\Palettes\SpringPalette;
+use MoonShine\ColorManager\Palettes\TealPalette;
 use MoonShine\ColorManager\Palettes\ValentinePalette;
 use MoonShine\ColorManager\Palettes\WinterPalette;
+use MoonShine\ColorManager\Palettes\YellowPalette;
+use MoonShine\Contracts\Core\DependencyInjection\FieldsContract;
+use MoonShine\Contracts\UI\FieldContract;
+use MoonShine\Laravel\Pages\Crud\FormPage;
+use MoonShine\UI\Components\Layout\Divider;
+use MoonShine\UI\Fields\Number;
+use MoonShine\UI\Fields\Select;
+use MoonShine\UI\Fields\Switcher;
+use MoonShine\UI\Fields\Text;
+use MoonShine\UI\Fields\Textarea;
 
 /**
  * @extends FormPage<GlobalSettingResource>
@@ -63,12 +66,12 @@ class GlobalSettingFormPage extends FormPage
         ];
 
         return [
-            Select::make('País', 'country_name')
+            Select::make(__('País'), 'country_name')
                 ->options(array_combine(array_keys($countryData), array_keys($countryData)))
-                ->reactive(function (\MoonShine\Contracts\Core\DependencyInjection\FieldsContract $fields, ?string $value) use ($countryData) {
+                ->reactive(function (FieldsContract $fields, ?string $value) use ($countryData) {
                     if ($value && isset($countryData[$value])) {
                         $data = $countryData[$value];
-                        
+
                         $fields->findByColumn('locale')?->setValue($data['locale']);
                         $fields->findByColumn('currency_code')?->setValue($data['currency_code']);
                         $fields->findByColumn('currency_symbol')?->setValue($data['currency_symbol']);
@@ -79,17 +82,16 @@ class GlobalSettingFormPage extends FormPage
                 })
                 ->required(),
 
-            Select::make('Idioma', 'locale')
+            Select::make(__('Idioma'), 'locale')
                 ->options([
-                    'es' => 'Español',
-                    'en' => 'English',
-                    'pt' => 'Português',
-                    'fr' => 'Français',
+                    'es' => __('Español'),
+                    'en' => __('English'),
+                    'pt' => __('Português'),
+                    'fr' => __('Français'),
                 ])
-                ->reactive()
                 ->required(),
 
-            Select::make('Color de Interfaz', 'theme_palette')
+            Select::make(__('Color de Interfaz'), 'theme_palette')
                 ->options([
                     PurplePalette::class => 'Purple',
                     CyanPalette::class => 'Cyan',
@@ -111,89 +113,89 @@ class GlobalSettingFormPage extends FormPage
                 ])
                 ->required(),
 
-            Text::make('Símbolo de Moneda', 'currency_symbol')
+            Text::make(__('Símbolo de Moneda'), 'currency_symbol')
                 ->default('$')
                 ->reactive()
                 ->required(),
 
-            Text::make('Código de Moneda', 'currency_code')
+            Text::make(__('Código de Moneda'), 'currency_code')
                 ->default('MXN')
                 ->reactive()
                 ->required(),
 
-            \MoonShine\UI\Fields\Number::make('Margen de Ganancia Por Defecto (%)', 'margen_defecto')
+            Number::make(__('Margen de Ganancia Por Defecto (%)'), 'margen_defecto')
                 ->default(25)
                 ->required(),
 
-            \MoonShine\UI\Fields\Number::make('Porcentaje de Impuesto (IVA %)', 'iva_porcentaje')
+            Number::make(__('Porcentaje de Impuesto (IVA %)'), 'iva_porcentaje')
                 ->default(13)
                 ->step(0.01)
                 ->reactive()
                 ->required()
-                ->hint('Tasa de impuesto aplicada temporalmente a las compras.'),
+                ->hint(__('Tasa de impuesto aplicada temporalmente a las compras.')),
 
-            Switcher::make('¿Los costos ingresados YA incluyen IVA?', 'prices_include_tax')
+            Switcher::make(__('¿Los costos ingresados YA incluyen IVA?'), 'prices_include_tax')
                 ->default(false)
-                ->hint('Si se activa, el sistema desglosará el IVA del precio ingresado. Si se desactiva, el sistema sumará el IVA al precio.'),
+                ->hint(__('Si se activa, el sistema desglosará el IVA del precio ingresado. Si se desactiva, el sistema sumará el IVA al precio.')),
 
-            \MoonShine\UI\Components\Layout\Divider::make('Gestión de Cajas y POS'),
+            Divider::make(__('Gestión de Cajas y POS')),
 
-            Select::make('Modo de Gestión de Caja', 'cash_management_mode')
+            Select::make(__('Modo de Gestión de Cajas'), 'cash_management_mode')
                 ->options([
-                    'express' => 'Modo Caja Única (Simple)',
-                    'industrial' => 'Modo Multicaja (Avanzado)'
+                    'express' => __('Modo Caja Única (Simple)'),
+                    'industrial' => __('Modo Multicaja (Avanzado)'),
                 ])
                 ->default('express')
                 ->required()
-                ->hint('El modo Simple es para tiendas con un solo terminal. El modo Avanzado permite múltiples cajas, sucursales y auditorías.'),
+                ->hint(__('El modo Simple es para tiendas con un solo terminal. El modo Avanzado permite múltiples cajas, sucursales y auditorías.')),
 
-            Switcher::make('Modo Kiosko por Defecto', 'win_kiosk_mode')
-                ->hint('Obligar a la App de Windows a iniciar en pantalla completa'),
+            Switcher::make(__('Modo Kiosko por Defecto'), 'win_kiosk_mode')
+                ->hint(__('Obligar a la App de Windows a iniciar en pantalla completa')),
 
-            Switcher::make('Modo Desarrollo por Defecto', 'win_debug_mode')
-                ->hint('Permite ver herramientas de desarrollador en la App'),
+            Switcher::make(__('Modo Desarrollo por Defecto'), 'win_debug_mode')
+                ->hint(__('Permite ver herramientas de desarrollador en la App')),
 
-            \MoonShine\UI\Fields\Number::make('Intervalo Sincronización (Segundos)', 'win_sync_interval')
+            Number::make(__('Intervalo Sincronización (Segundos)'), 'win_sync_interval')
                 ->default(60)
                 ->required()
-                ->hint('Tiempo entre actualizaciones de datos en modo offline'),
+                ->hint(__('Tiempo entre actualizaciones de datos en modo offline')),
 
-            Switcher::make('Auto-actualizar App', 'win_auto_actualizar')
+            Switcher::make(__('Auto-actualizar App'), 'win_auto_actualizar')
                 ->default(true),
 
-            Text::make('Versión Mínima Requerida', 'win_min_version')
+            Text::make(__('Versión Mínima Requerida'), 'win_min_version')
                 ->default('1.0.0')
-                ->hint('Bloquea el acceso a versiones anteriores a esta'),
+                ->hint(__('Bloquea el acceso a versiones anteriores a esta')),
 
-            Switcher::make('Iniciar con Windows', 'win_auto_inicio')
+            Switcher::make(__('Iniciar con Windows'), 'win_auto_inicio')
                 ->default(true),
 
-            Text::make('Ruta de Datos por Defecto', 'win_default_ruta_datos')
+            Text::make(__('Ruta de Datos por Defecto'), 'win_default_ruta_datos')
                 ->default('C:\POS\Data')
-                ->hint('Donde la App de escritorio guardará la base de datos local'),
+                ->hint(__('Donde la App de escritorio guardará la base de datos local')),
 
-            \MoonShine\UI\Components\Layout\Divider::make('Ajustes del Ticket (Recibo)'),
+            Divider::make(__('Ajustes del Ticket (Recibo)')),
 
-            \MoonShine\UI\Fields\Textarea::make('Cabecera del Ticket', 'receipt_header')
-                ->hint('Texto superior del ticket (Ej: Nombre Tienda, Dirección, RFC)'),
+            Textarea::make(__('Cabecera del Ticket'), 'receipt_header')
+                ->hint(__('Texto superior del ticket (Ej: Nombre Tienda, Dirección, RFC)')),
 
-            \MoonShine\UI\Fields\Textarea::make('Pie de Página', 'receipt_footer')
+            Textarea::make(__('Pie de Página'), 'receipt_footer')
                 ->default('¡Gracias por su compra!')
-                ->hint('Texto al final del ticket'),
+                ->hint(__('Texto al final del ticket')),
 
-            \MoonShine\UI\Components\Layout\Divider::make('Seguridad y Auditoría'),
+            Divider::make(__('Seguridad y Auditoría')),
 
-            Switcher::make('Bloquear POS sin Turno Abierto', 'pos_block_without_shift')
+            Switcher::make(__('Bloquear POS sin Turno Abierto'), 'pos_block_without_shift')
                 ->default(false)
-                ->hint('Si se activa, el terminal POS no permitirá realizar ventas ni búsquedas si no hay una jornada de caja iniciada.'),
+                ->hint(__('Si se activa, el terminal POS no permitirá realizar ventas ni búsquedas si no hay una jornada de caja iniciada.')),
 
-            \MoonShine\UI\Fields\Number::make('Monto de Apertura Global ($)', 'default_opening_amount')
+            Number::make(__('Monto de Apertura Global ($)'), 'default_opening_amount')
                 ->default(50)
-                ->hint('Es el dinero que se asignará automáticamente a todas las cajas al usar el botón "Iniciar Jornada Única".'),
+                ->hint(__('Es el dinero que se asignará automáticamente a todas las cajas al usar el botón "Iniciar Jornada Única".')),
 
-            Switcher::make('Apertura Automática de Caja', 'auto_open_shifts')
+            Switcher::make(__('Apertura Automática de Caja'), 'auto_open_shifts')
                 ->default(false)
-                ->hint('Si se activa, el turno de caja se abrirá automáticamente al entrar al terminal POS usando el monto de apertura global.'),
+                ->hint(__('Si se activa, el turno de caja se abrirá automáticamente al entrar al terminal POS usando el monto de apertura global.')),
         ];
     }
 }

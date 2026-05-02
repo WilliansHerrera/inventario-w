@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Layouts;
 
-use MoonShine\Laravel\Layouts\AppLayout as BaseLayout;
-use MoonShine\MenuManager\MenuGroup;
-use MoonShine\MenuManager\MenuItem;
-use MoonShine\Laravel\Resources\MoonShineUserResource;
-use MoonShine\Laravel\Resources\MoonShineUserRoleResource;
+use App\MoonShine\Resources\Caja\CajaResource;
+use App\MoonShine\Resources\Inventario\InventarioResource;
 use App\MoonShine\Resources\Locale\LocaleResource;
 use App\MoonShine\Resources\Producto\ProductoResource;
-use App\MoonShine\Resources\Inventario\InventarioResource;
-use App\MoonShine\Resources\Caja\CajaResource;
+use MoonShine\Laravel\Layouts\AppLayout as BaseLayout;
+use MoonShine\Laravel\Resources\MoonShineUserResource;
+use MoonShine\Laravel\Resources\MoonShineUserRoleResource;
+use MoonShine\MenuManager\MenuGroup;
+use MoonShine\MenuManager\MenuItem;
 
 class AppLayout extends BaseLayout
 {

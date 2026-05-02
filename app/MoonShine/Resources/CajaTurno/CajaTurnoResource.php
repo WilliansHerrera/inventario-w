@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources\CajaTurno;
 
 use App\Models\CajaTurno;
-use App\MoonShine\Resources\CajaTurno\Pages\CajaTurnoIndexPage;
-use App\MoonShine\Resources\CajaTurno\Pages\CajaTurnoFormPage;
 use App\MoonShine\Resources\CajaTurno\Pages\CajaTurnoDetailPage;
-use MoonShine\Laravel\Resources\ModelResource;
+use App\MoonShine\Resources\CajaTurno\Pages\CajaTurnoFormPage;
+use App\MoonShine\Resources\CajaTurno\Pages\CajaTurnoIndexPage;
 use MoonShine\Contracts\Core\PageContract;
+use MoonShine\Laravel\Resources\ModelResource;
+use MoonShine\Support\Enums\Action;
+use MoonShine\Support\ListOf;
 
 /**
  * @extends ModelResource<CajaTurno, CajaTurnoIndexPage, CajaTurnoFormPage, CajaTurnoDetailPage>
@@ -20,9 +22,9 @@ class CajaTurnoResource extends ModelResource
 
     protected string $title = 'Historial de Turnos / Arqueos';
 
-    protected function activeActions(): \MoonShine\Support\ListOf
+    protected function activeActions(): ListOf
     {
-        return parent::activeActions()->except(\MoonShine\Support\Enums\Action::CREATE, \MoonShine\Support\Enums\Action::UPDATE, \MoonShine\Support\Enums\Action::DELETE);
+        return parent::activeActions()->except(Action::CREATE, Action::UPDATE, Action::DELETE);
     }
 
     /**

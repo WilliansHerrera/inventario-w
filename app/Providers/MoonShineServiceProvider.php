@@ -4,26 +4,29 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use MoonShine\Contracts\Core\DependencyInjection\CoreContract;
-use MoonShine\Laravel\DependencyInjection\MoonShine;
-use MoonShine\Laravel\DependencyInjection\MoonShineConfigurator;
+use App\MoonShine\Pages\BackupPage;
+use App\MoonShine\Pages\BarcodePrintingPage;
+use App\MoonShine\Pages\POS;
+use App\MoonShine\Pages\ResetPage;
+use App\MoonShine\Pages\SystemUpdatePage;
+use App\MoonShine\Resources\Caja\CajaResource;
+use App\MoonShine\Resources\CajaTurno\CajaTurnoResource;
+use App\MoonShine\Resources\Compra\CompraResource;
+use App\MoonShine\Resources\CompraDetalle\CompraDetalleResource;
+use App\MoonShine\Resources\GlobalSetting\GlobalSettingResource;
+use App\MoonShine\Resources\Inventario\InventarioResource;
+use App\MoonShine\Resources\InventarioMovimientoResource;
+use App\MoonShine\Resources\Locale\LocaleResource;
 use App\MoonShine\Resources\MoonShineUser\MoonShineUserResource;
 use App\MoonShine\Resources\MoonShineUserRole\MoonShineUserRoleResource;
-use App\MoonShine\Resources\Locale\LocaleResource;
 use App\MoonShine\Resources\Producto\ProductoResource;
-use App\MoonShine\Resources\Inventario\InventarioResource;
-use App\MoonShine\Resources\Caja\CajaResource;
+use App\MoonShine\Resources\ProductoCostoHistorial\ProductoCostoHistorialResource;
+use App\MoonShine\Resources\Proveedor\ProveedorResource;
 use App\MoonShine\Resources\Venta\VentaResource;
 use App\MoonShine\Resources\VentaDetalle\VentaDetalleResource;
-use App\MoonShine\Resources\GlobalSetting\GlobalSettingResource;
-use App\MoonShine\Resources\CajaTurno\CajaTurnoResource;
-use App\MoonShine\Resources\InventarioMovimientoResource;
-use App\MoonShine\Pages\BarcodePrintingPage;
-use App\MoonShine\Resources\Proveedor\ProveedorResource;
-use App\MoonShine\Resources\Compra\CompraResource;
-use App\MoonShine\Resources\ProductoCostoHistorial\ProductoCostoHistorialResource;
-use App\MoonShine\Resources\CompraDetalle\CompraDetalleResource;
+use Illuminate\Support\ServiceProvider;
+use MoonShine\Contracts\Core\DependencyInjection\CoreContract;
+use MoonShine\Laravel\DependencyInjection\MoonShineConfigurator;
 
 class MoonShineServiceProvider extends ServiceProvider
 {
@@ -52,12 +55,11 @@ class MoonShineServiceProvider extends ServiceProvider
             ])
             ->pages([
                 ...$core->getConfig()->getPages(),
-                \App\MoonShine\Pages\POS::class,
-                \App\MoonShine\Pages\BackupPage::class,
-                \App\MoonShine\Pages\SystemUpdatePage::class,
-                \App\MoonShine\Pages\BarcodePrintingPage::class,
-                \App\MoonShine\Pages\ResetPage::class,
-            ])
-        ;
+                POS::class,
+                BackupPage::class,
+                SystemUpdatePage::class,
+                BarcodePrintingPage::class,
+                ResetPage::class,
+            ]);
     }
 }

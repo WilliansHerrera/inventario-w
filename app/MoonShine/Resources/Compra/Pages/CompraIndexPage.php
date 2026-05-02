@@ -4,16 +4,24 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\Compra\Pages;
 
-use MoonShine\Laravel\Pages\Crud\IndexPage;
-use MoonShine\Contracts\UI\ComponentContract;
-use MoonShine\UI\Components\Table\TableBuilder;
-use MoonShine\Contracts\UI\FieldContract;
-use MoonShine\Laravel\QueryTags\QueryTag;
-use MoonShine\UI\Components\Metrics\Wrapped\Metric;
 use App\MoonShine\Resources\Compra\CompraResource;
+use App\MoonShine\Resources\Locale\LocaleResource;
+use App\MoonShine\Resources\Proveedor\ProveedorResource;
+use MoonShine\Contracts\UI\ActionButtonContract;
+use MoonShine\Contracts\UI\ComponentContract;
+use MoonShine\Contracts\UI\FieldContract;
+use MoonShine\Laravel\Fields\Relationships\BelongsTo;
+use MoonShine\Laravel\Pages\Crud\IndexPage;
+use MoonShine\Laravel\QueryTags\QueryTag;
 use MoonShine\Support\ListOf;
+use MoonShine\UI\Components\ActionButton;
+use MoonShine\UI\Components\Metrics\Wrapped\Metric;
+use MoonShine\UI\Components\Table\TableBuilder;
+use MoonShine\UI\Fields\Date;
+use MoonShine\UI\Fields\ID;
+use MoonShine\UI\Fields\Number;
+use MoonShine\UI\Fields\Text;
 use Throwable;
-
 
 /**
  * @extends IndexPage<CompraResource>
@@ -28,38 +36,38 @@ class CompraIndexPage extends IndexPage
     protected function fields(): iterable
     {
         return [
-            \MoonShine\UI\Fields\ID::make()->sortable(),
-            \MoonShine\UI\Fields\Date::make('Fecha', 'created_at')
+            ID::make()->sortable()->columnSelection(false),
+            Date::make(__('Fecha'), 'created_at')
                 ->format('d/m/Y H:i')
                 ->sortable(),
-            \MoonShine\UI\Fields\Text::make('N° Documento', 'nro_documento')->sortable(),
-            \MoonShine\Laravel\Fields\Relationships\BelongsTo::make('Proveedor', 'proveedor', resource: \App\MoonShine\Resources\Proveedor\ProveedorResource::class),
-            \MoonShine\Laravel\Fields\Relationships\BelongsTo::make('Local', 'locale', resource: \App\MoonShine\Resources\Locale\LocaleResource::class),
-            \MoonShine\UI\Fields\Number::make('Total', 'total')
-                ->changePreview(fn($value) => format_currency((float) $value))
+            Text::make(__('N° Documento'), 'nro_documento')->sortable()->columnSelection(false),
+            BelongsTo::make(__('Proveedor'), 'proveedor', resource: ProveedorResource::class),
+            BelongsTo::make(__('Local'), 'locale', resource: LocaleResource::class),
+            Number::make(__('Total'), 'total')
+                ->changePreview(fn ($value) => format_currency((float) $value))
                 ->sortable(),
-            \MoonShine\UI\Fields\Text::make('Estado', 'estado')
-                ->badge(fn($val) => $val === 'completada' ? 'green' : 'gray'),
+            Text::make(__('Estado'), 'estado')
+                ->badge(fn ($val) => $val === 'completada' ? 'green' : 'gray'),
         ];
     }
 
     protected function buttons(): ListOf
     {
-        return new ListOf(\MoonShine\Contracts\UI\ActionButtonContract::class, [
+        return new ListOf(ActionButtonContract::class, [
             ...parent::buttons()->toArray(),
-            \MoonShine\UI\Components\ActionButton::make(
-                'Procesar',
+            ActionButton::make(
+                __('Procesar'),
             )
-            ->method('completarCompra')
-            ->primary()
-            ->icon('check-circle')
-            ->canSee(fn (mixed $item) => $item->estado === 'borrador')
-            ->withConfirm(
-                '¿Confirmar Recepción?',
-                'Esto incrementará el stock de los productos y actualizará los costos del sistema de forma permanente.',
-                'Proceder'
-            )
-            ->showInLine(),
+                ->method('completarCompra')
+                ->primary()
+                ->icon('check-circle')
+                ->canSee(fn (mixed $item) => $item->estado === 'borrador')
+                ->withConfirm(
+                    __('¿Confirmar Recepción?'),
+                    __('Esto incrementará el stock de los productos y actualizará los costos del sistema de forma permanente.'),
+                    __('Proceder')
+                )
+                ->showInLine(),
         ]);
     }
 
@@ -89,44 +97,46 @@ class CompraIndexPage extends IndexPage
 
     /**
      * @param  TableBuilder  $component
-     *
      * @return TableBuilder
      */
     protected function modifyListComponent(ComponentContract $component): ComponentContract
     {
-        return $component;
+        return $component->columnSelection();
     }
 
     /**
      * @return list<ComponentContract>
+     *
      * @throws Throwable
      */
     protected function topLayer(): array
     {
         return [
-            ...parent::topLayer()
+            ...parent::topLayer(),
         ];
     }
 
     /**
      * @return list<ComponentContract>
+     *
      * @throws Throwable
      */
     protected function mainLayer(): array
     {
         return [
-            ...parent::mainLayer()
+            ...parent::mainLayer(),
         ];
     }
 
     /**
      * @return list<ComponentContract>
+     *
      * @throws Throwable
      */
     protected function bottomLayer(): array
     {
         return [
-            ...parent::bottomLayer()
+            ...parent::bottomLayer(),
         ];
     }
 }

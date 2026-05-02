@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\VentaDetalle;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\VentaDetalle;
-use App\MoonShine\Resources\VentaDetalle\Pages\VentaDetalleIndexPage;
-use App\MoonShine\Resources\VentaDetalle\Pages\VentaDetalleFormPage;
 use App\MoonShine\Resources\VentaDetalle\Pages\VentaDetalleDetailPage;
-
-use MoonShine\Laravel\Resources\ModelResource;
+use App\MoonShine\Resources\VentaDetalle\Pages\VentaDetalleFormPage;
+use App\MoonShine\Resources\VentaDetalle\Pages\VentaDetalleIndexPage;
 use MoonShine\Contracts\Core\PageContract;
+use MoonShine\Laravel\Resources\ModelResource;
 
 /**
  * @extends ModelResource<VentaDetalle, VentaDetalleIndexPage, VentaDetalleFormPage, VentaDetalleDetailPage>
@@ -24,6 +22,15 @@ class VentaDetalleResource extends ModelResource
 
     protected string $column = 'id';
     
+    protected bool $columnSelection = true;
+
+    public function search(): array
+    {
+        return ['id', 'producto.nombre', 'producto.sku'];
+    }
+
+    protected array $with = ['producto'];
+
     /**
      * @return list<class-string<PageContract>>
      */

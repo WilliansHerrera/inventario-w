@@ -7,8 +7,8 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "POS-Inventario-W",
-    "version": "2.2.0"
+    "productName": "Inventario-W POS Terminal",
+    "version": "3.0.0"
   },
   "tauri": {
     "allowlist": {
@@ -41,8 +41,8 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.inventario-w.pos",
-      "longDescription": "Terminal de Punto de Venta Nativa para Windows con Sincronización SQLite.",
+      "identifier": "com.inventario-w.terminal",
+      "longDescription": "Terminal de Punto de Venta Premium para Inventario-W.",
       "macOS": {
         "entitlements": null,
         "exceptionDomain": "",

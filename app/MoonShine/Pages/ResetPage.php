@@ -21,7 +21,7 @@ class ResetPage extends Page
     protected function components(): iterable
     {
         return [
-            ActionButton::make(__('Empezar de Cero'), fn() => route('admin.system.factory-reset'))
+            ActionButton::make(__('Empezar de Cero'), fn () => route('admin.system.factory-reset'))
                 ->error()
                 ->icon('trash')
                 ->method('post')

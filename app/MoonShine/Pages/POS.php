@@ -22,4 +22,9 @@ class POS extends Page
             FlexibleRender::make(view('admin.pos')),
         ];
     }
+
+    public function render(): string
+    {
+        return view('admin.pos')->render();
+    }
 }

@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\User;
+
 return [
 
     /*
@@ -40,11 +42,6 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-
-        'moonshine' => [
-            'driver' => 'session',
-            'provider' => 'moonshine_users',
-        ],
     ],
 
     /*
@@ -67,12 +64,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
-        ],
-
-        'moonshine_users' => [
-            'driver' => 'eloquent',
-            'model' => \MoonShine\Laravel\Models\MoonshineUser::class,
+            'model' => env('AUTH_MODEL', User::class),
         ],
 
         // 'users' => [

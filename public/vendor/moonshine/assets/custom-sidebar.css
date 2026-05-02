@@ -1,102 +1,55 @@
-/* 
-    POS - MOONSHINE 4
-    Arquitectura Industrial Premium
-*/
-
-:root {
-    --sidebar-width: 200px;
-    --sidebar-collapsed-width: 65px;
-    --sidebar-real-width: var(--sidebar-width);
+/* Premium Sidebar Improvements */
+.layout-menu {
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* NORMALIZACIÓN GLOBAL PARA TODO EL SISTEMA */
-html {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
+.layout-menu-header, 
+.layout-sidebar-header,
+.sidebar-header {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding: 1rem 0 !important;
 }
 
-/* Estandarización de Scrollbars para Firefox */
-* {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(99, 102, 241, 0.4) transparent;
-}
-
-/* Sincronización de Scrollbars para Chrome/Safari/Edge */
-::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgba(99, 102, 241, 0.4);
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(99, 102, 241, 0.6);
-}
-
-/* SIDEBAR BASE - SOLO EN ESCRITORIO */
-@media (min-width: 1024px) {
-    .layout-menu {
-        width: var(--sidebar-real-width) !important;
-        transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s ease;
-        position: relative;
-        overflow-x: hidden;
-    }
-
-    /* CUANDO ESTÁ MINIMIZADO (Modo Iconos) */
-    .layout-menu._is-minimized {
-        width: var(--sidebar-collapsed-width) !important;
-    }
-
-    /* Ocultar textos cuando está minimizado */
-    .layout-menu._is-minimized .menu-text,
-    .layout-menu._is-minimized .menu-arrow,
-    .layout-menu._is-minimized .menu-inner-item-title {
-        display: none !important;
-        visibility: hidden !important;
-    }
-
-    .layout-menu._is-minimized .menu-link {
-        justify-content: center !important;
-        padding: 0.75rem 0 !important;
-    }
-
-    /* RESIZE HANDLER (El "palito" para arrastrar) */
-    .sidebar-resizer {
-        position: absolute;
-        top: 0;
-        right: -4px;
-        width: 8px;
-        height: 100%;
-        cursor: col-resize;
-        z-index: 9999;
-        transition: background-color 0.2s;
-    }
-
-    .sidebar-resizer:hover,
-    .sidebar-resizer.is-dragging {
-        background-color: rgba(99, 102, 241, 0.5);
-    }
-}
-
-/* Ajustes de Contenedor General - Siempre activos para maximizar espacio */
-.layout-page .container {
+.logo img {
+    height: auto !important;
+    max-height: 40px !important; 
+    width: auto !important;
     max-width: 100% !important;
-    padding-left: 10px !important;
-    padding-right: 10px !important;
+    margin: 0 auto !important;
+    transition: all 0.3s ease;
+    object-fit: contain !important;
 }
 
-/* Fix para Firefox Grid Layout para evitar que los items desborden */
-.grid > * {
-    min-width: 0;
+.logo:hover img {
+    transform: scale(1.02);
 }
 
-/* En móviles ocultar el resizer */
-@media (max-width: 1023px) {
-    .sidebar-resizer {
-        display: none !important;
-    }
+/* Logos in minimized/collapsed state */
+.layout-menu-minimized .logo img,
+.layout-menu-collapsed .logo img,
+[x-data*="minimized: true"] .logo img,
+.layout-sidebar-collapsed .logo img {
+    max-height: 32px !important;
+    max-width: 100% !important;
+    object-fit: contain !important;
+}
+
+.logo, .logo-app, .logo-small {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-height: 64px !important;
+}
+
+.menu-link:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+html:not(.dark) .menu-link:hover {
+    background: rgba(0, 0, 0, 0.05);
 }

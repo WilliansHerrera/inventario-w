@@ -5,14 +5,15 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources\Inventario;
 
 use App\Models\Inventario;
-use App\MoonShine\Resources\Inventario\Pages\InventarioIndexPage;
-use App\MoonShine\Resources\Inventario\Pages\InventarioFormPage;
 use App\MoonShine\Resources\Inventario\Pages\InventarioDetailPage;
-
-use MoonShine\Laravel\Resources\ModelResource;
-use MoonShine\Contracts\Core\PageContract;
-use MoonShine\UI\Components\ActionButton;
+use App\MoonShine\Resources\Inventario\Pages\InventarioFormPage;
+use App\MoonShine\Resources\Inventario\Pages\InventarioIndexPage;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
+use MoonShine\Contracts\Core\PageContract;
+use MoonShine\Laravel\Resources\ModelResource;
+use MoonShine\UI\Components\ActionButton;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @extends ModelResource<Inventario, InventarioIndexPage, InventarioFormPage, InventarioDetailPage>
@@ -24,6 +25,13 @@ class InventarioResource extends ModelResource
     protected string $title = 'Inventarios';
 
     protected string $column = 'id';
+    
+    protected bool $columnSelection = true;
+
+    public function search(): array
+    {
+        return ['id', 'producto.nombre', 'producto.sku', 'producto.codigo_barra'];
+    }
 
     /**
      * @return list<class-string<PageContract>>
@@ -56,12 +64,12 @@ class InventarioResource extends ModelResource
         return [
             ActionButton::make(
                 __('Imprimir'),
-                fn(Inventario $item) => route('admin.products.barcode', $item->producto_id)
+                fn (Inventario $item) => route('admin.products.barcode', $item->producto_id)
             )
-            ->icon('qr-code')
-            ->blank()
-            ->primary()
-            ->customAttributes(['title' => __('Imprimir Código de Barras')])
+                ->icon('qr-code')
+                ->blank()
+                ->primary()
+                ->customAttributes(['title' => __('Imprimir Código de Barras')]),
         ];
     }
 
@@ -70,12 +78,12 @@ class InventarioResource extends ModelResource
         return [
             ActionButton::make(
                 __('Imprimir Código de Barras'),
-                fn(Inventario $item) => route('admin.products.barcode', $item->producto_id)
+                fn (Inventario $item) => route('admin.products.barcode', $item->producto_id)
             )
-            ->icon('qr-code')
-            ->blank()
-            ->primary()
-            ->customAttributes(['class' => 'btn-lg'])
+                ->icon('qr-code')
+                ->blank()
+                ->primary()
+                ->customAttributes(['class' => 'btn-lg']),
         ];
     }
 
@@ -87,14 +95,14 @@ class InventarioResource extends ModelResource
                 ->blank()
                 ->primary()
                 ->method('bulkPrint')
-                ->bulk()
+                ->bulk(),
         ];
     }
 
-    public function bulkPrint(\Illuminate\Support\Collection $models): \Symfony\Component\HttpFoundation\Response
+    public function bulkPrint(Collection $models): Response
     {
         $ids = $models->pluck('producto_id')->unique()->implode(',');
-        
+
         return response()->redirectTo(route('admin.products.barcode', ['ids' => $ids]));
     }
 

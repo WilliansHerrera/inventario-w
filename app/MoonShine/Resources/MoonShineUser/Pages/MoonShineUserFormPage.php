@@ -4,18 +4,15 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\MoonShineUser\Pages;
 
-use Illuminate\Contracts\Database\Eloquent\Builder;
+use App\Models\User;
+use App\MoonShine\Resources\MoonShineUser\MoonShineUserResource;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
-use MoonShine\Laravel\Fields\Relationships\BelongsTo;
-use MoonShine\Laravel\Models\MoonshineUser;
-use MoonShine\Laravel\Models\MoonshineUserRole;
 use MoonShine\Laravel\Pages\Crud\FormPage;
-use App\MoonShine\Resources\MoonShineUser\MoonShineUserResource;
-use App\MoonShine\Resources\MoonShineUserRole\MoonShineUserRoleResource;
+use MoonShine\Laravel\Fields\Relationships\BelongsTo;
 use MoonShine\UI\Components\Collapse;
 use MoonShine\UI\Components\Layout\Box;
 use MoonShine\UI\Components\Layout\Flex;
@@ -30,7 +27,7 @@ use MoonShine\UI\Fields\PasswordRepeat;
 use MoonShine\UI\Fields\Text;
 
 /**
- * @extends FormPage<MoonShineUserResource, MoonShineUser>
+ * @extends FormPage<MoonShineUserResource, User>
  */
 final class MoonShineUserFormPage extends FormPage
 {
@@ -48,11 +45,11 @@ final class MoonShineUserFormPage extends FormPage
                         BelongsTo::make(
                             __('moonshine::ui.resource.role'),
                             'moonshineUserRole',
-                            formatted: static fn (MoonshineUserRole $model) => $model->name,
-                            resource: MoonShineUserRoleResource::class,
+                            formatted: static fn (\MoonShine\Laravel\Models\MoonshineUserRole $model) => $model->name,
+                            resource: \App\MoonShine\Resources\MoonShineUserRole\MoonShineUserRoleResource::class,
                         )
                             ->creatable()
-                            ->valuesQuery(static fn (Builder $q) => $q->select(['id', 'name'])),
+                            ->valuesQuery(static fn (\Illuminate\Contracts\Database\Eloquent\Builder $q) => $q->select(['id', 'name'])),
 
                         Flex::make([
                             Text::make(__('moonshine::ui.resource.name'), 'name')
@@ -66,14 +63,13 @@ final class MoonShineUserFormPage extends FormPage
                             ->nullable()
                             ->customAttributes(['maxlength' => 4]),
 
-
                         Image::make(__('moonshine::ui.resource.avatar'), 'avatar')
                             ->disk(moonshineConfig()->getDisk())
-                            ->dir('moonshine_users')
+                            ->dir('users')
                             ->allowedExtensions(['jpg', 'png', 'jpeg', 'gif']),
 
                         Date::make(__('moonshine::ui.resource.created_at'), 'created_at')
-                            ->format("d.m.Y")
+                            ->format('d.m.Y')
                             ->default(now()->toDateTimeString()),
                     ])->icon('user-circle'),
 
@@ -100,12 +96,11 @@ final class MoonShineUserFormPage extends FormPage
             'moonshine_user_role_id' => 'required',
             'pos_pin' => ['nullable', 'string', 'size:4'],
             'email' => [
-
                 'sometimes',
                 'bail',
                 'required',
                 'email',
-                Rule::unique('moonshine_users')->ignoreModel($item->getOriginal()),
+                Rule::unique('users')->ignoreModel($item->getOriginal()),
             ],
             'avatar' => ['sometimes', 'nullable', 'image', 'mimes:jpeg,jpg,png,gif'],
             'password' => [

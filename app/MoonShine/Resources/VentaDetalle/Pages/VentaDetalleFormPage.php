@@ -4,19 +4,18 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\VentaDetalle\Pages;
 
-use MoonShine\Laravel\Pages\Crud\FormPage;
-use MoonShine\Contracts\UI\ComponentContract;
-use MoonShine\Contracts\UI\FormBuilderContract;
-use MoonShine\UI\Components\FormBuilder;
-use MoonShine\Contracts\UI\FieldContract;
-use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
-use App\MoonShine\Resources\VentaDetalle\VentaDetalleResource;
-use MoonShine\Support\ListOf;
-use MoonShine\UI\Fields\Number;
-use MoonShine\Laravel\Fields\Relationships\BelongsTo;
 use App\MoonShine\Resources\Producto\ProductoResource;
+use App\MoonShine\Resources\VentaDetalle\VentaDetalleResource;
+use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
+use MoonShine\Contracts\UI\ComponentContract;
+use MoonShine\Contracts\UI\FieldContract;
+use MoonShine\Contracts\UI\FormBuilderContract;
+use MoonShine\Laravel\Fields\Relationships\BelongsTo;
+use MoonShine\Laravel\Pages\Crud\FormPage;
+use MoonShine\Support\ListOf;
+use MoonShine\UI\Components\FormBuilder;
+use MoonShine\UI\Fields\Number;
 use Throwable;
-
 
 /**
  * @extends FormPage<VentaDetalleResource>
@@ -35,10 +34,10 @@ class VentaDetalleFormPage extends FormPage
             Number::make('Cantidad', 'cantidad')->required(),
             Number::make('Precio Unitario', 'precio_unitario')
                 ->required()
-                ->hint(get_currency_symbol() . ' ' . get_global_setting('currency_code')),
+                ->hint(get_currency_symbol().' '.get_global_setting('currency_code')),
             Number::make('Subtotal', 'subtotal')
                 ->required()
-                ->hint(get_currency_symbol() . ' ' . get_global_setting('currency_code')),
+                ->hint(get_currency_symbol().' '.get_global_setting('currency_code')),
         ];
     }
 
@@ -59,7 +58,6 @@ class VentaDetalleFormPage extends FormPage
 
     /**
      * @param  FormBuilder  $component
-     *
      * @return FormBuilder
      */
     protected function modifyFormComponent(FormBuilderContract $component): FormBuilderContract
@@ -69,34 +67,37 @@ class VentaDetalleFormPage extends FormPage
 
     /**
      * @return list<ComponentContract>
+     *
      * @throws Throwable
      */
     protected function topLayer(): array
     {
         return [
-            ...parent::topLayer()
+            ...parent::topLayer(),
         ];
     }
 
     /**
      * @return list<ComponentContract>
+     *
      * @throws Throwable
      */
     protected function mainLayer(): array
     {
         return [
-            ...parent::mainLayer()
+            ...parent::mainLayer(),
         ];
     }
 
     /**
      * @return list<ComponentContract>
+     *
      * @throws Throwable
      */
     protected function bottomLayer(): array
     {
         return [
-            ...parent::bottomLayer()
+            ...parent::bottomLayer(),
         ];
     }
 }

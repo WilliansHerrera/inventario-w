@@ -1,0 +1,14 @@
+<svg width="650" height="150" viewBox="0 0 650 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradyellow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#eab308" />
+      <stop offset="100%" stop-color="#fde047" />
+    </linearGradient>
+  </defs>
+  <g transform="translate(10, -25) scale(0.4)">
+    <circle cx="250" cy="250" r="180" fill="url(#bgGradyellow)" />
+    <path d="M140 180 L200 340 L250 230 L300 340 L360 180" stroke="#ffffff" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+  <text x="230" y="95" font-family="'Outfit', 'Inter', sans-serif" font-weight="900" font-size="64" fill="#ffffff" letter-spacing="-2">Inventario</text>
+  <text x="555" y="95" font-family="'Outfit', 'Inter', sans-serif" font-weight="900" font-size="64" fill="#eab308" letter-spacing="-2">W</text>
+</svg>

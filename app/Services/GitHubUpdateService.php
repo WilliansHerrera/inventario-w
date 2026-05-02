@@ -3,13 +3,14 @@
 namespace App\Services;
 
 use App\Models\PosVersion;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\File;
 
 class GitHubUpdateService
 {
     protected string $repo = 'WilliansHerrera/inventario-w';
+
     protected string $apiBase = 'https://api.github.com/repos/';
 
     /**
@@ -20,11 +21,11 @@ class GitHubUpdateService
         try {
             $response = Http::withHeaders([
                 'Accept' => 'application/vnd.github.v3+json',
-                'User-Agent' => 'Inventario-W-App'
-            ])->get($this->apiBase . $this->repo . '/releases');
+                'User-Agent' => 'Inventario-W-App',
+            ])->get($this->apiBase.$this->repo.'/releases');
 
-            if (!$response->successful()) {
-                throw new \Exception("Error al conectar con GitHub: " . $response->body());
+            if (! $response->successful()) {
+                throw new \Exception('Error al conectar con GitHub: '.$response->body());
             }
 
             $releases = $response->json();
@@ -36,13 +37,15 @@ class GitHubUpdateService
                     return str_ends_with($asset['name'], '.exe');
                 });
 
-                if (!$exeAsset) continue;
+                if (! $exeAsset) {
+                    continue;
+                }
 
                 $version = PosVersion::updateOrCreate(
                     ['version' => $release['tag_name']],
                     [
-                        'changelog'    => $release['body'],
-                        'filename'     => $exeAsset['browser_download_url'], // Guardamos la URL directa de GitHub
+                        'changelog' => $release['body'],
+                        'filename' => $exeAsset['browser_download_url'], // Guardamos la URL directa de GitHub
                         'release_date' => $release['published_at'],
                     ]
                 );
@@ -56,7 +59,8 @@ class GitHubUpdateService
 
             return ['success' => true, 'count' => $syncedCount];
         } catch (\Exception $e) {
-            Log::error("GitHub POS Sync failed: " . $e->getMessage());
+            Log::error('GitHub POS Sync failed: '.$e->getMessage());
+
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -69,10 +73,10 @@ class GitHubUpdateService
         try {
             $response = Http::withHeaders([
                 'Accept' => 'application/vnd.github.v3+json',
-                'User-Agent' => 'Inventario-W-App'
-            ])->get($this->apiBase . $this->repo . '/commits', ['per_page' => 5]);
+                'User-Agent' => 'Inventario-W-App',
+            ])->get($this->apiBase.$this->repo.'/commits', ['per_page' => 5]);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 return [];
             }
 
@@ -95,16 +99,16 @@ class GitHubUpdateService
             // Verificamos si ya existe esta versión
             $exists = PosVersion::where('version', $versionNum)->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 // Si no existe, la creamos y la marcamos como latest si no hay ninguna otra latest
                 $hasLatest = PosVersion::where('is_latest', true)->exists();
-                
+
                 PosVersion::create([
-                    'version'      => $versionNum,
-                    'changelog'    => 'Versión detectada localmente (Código Fuente).',
-                    'is_latest'    => !$hasLatest,
+                    'version' => $versionNum,
+                    'changelog' => 'Versión detectada localmente (Código Fuente).',
+                    'is_latest' => ! $hasLatest,
                     'release_date' => now(),
-                    'filename'     => 'POS-Setup.exe' // Default local name
+                    'filename' => 'POS-Setup.exe', // Default local name
                 ]);
             }
         }

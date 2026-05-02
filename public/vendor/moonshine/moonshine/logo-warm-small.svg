@@ -1,0 +1,25 @@
+<svg width="500" height="500" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradWarm" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f97316" />
+      <stop offset="100%" stop-color="#f43f5e" />
+    </linearGradient>
+    <linearGradient id="boxGradWarm" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fde047" />
+      <stop offset="100%" stop-color="#f97316" />
+    </linearGradient>
+    <filter id="dropShadowWarm" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#f43f5e" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  
+  <circle cx="250" cy="250" r="220" fill="url(#bgGradWarm)" opacity="0.15" filter="blur(30px)" />
+  <circle cx="250" cy="250" r="180" fill="url(#bgGradWarm)" filter="url(#dropShadowWarm)" />
+
+  <path d="M140 180 L200 340 L250 230 L300 340 L360 180" 
+        stroke="#ffffff" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" />
+
+  <path d="M220 200 L250 180 L280 200 L250 220 Z" fill="url(#boxGradWarm)" />
+  <path d="M220 200 L220 235 L250 255 L250 220 Z" fill="url(#boxGradWarm)" opacity="0.8" />
+  <path d="M280 200 L280 235 L250 255 L250 220 Z" fill="url(#boxGradWarm)" opacity="0.6" />
+</svg>

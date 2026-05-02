@@ -5,13 +5,22 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources\Caja;
 
 use App\Models\Caja;
-use App\MoonShine\Resources\Caja\Pages\CajaIndexPage;
-use App\MoonShine\Resources\Caja\Pages\CajaFormPage;
+use App\Models\CajaMovimientoCategoria;
 use App\MoonShine\Resources\Caja\Pages\CajaDetailPage;
-
-use MoonShine\Laravel\Resources\ModelResource;
+use App\MoonShine\Resources\Caja\Pages\CajaFormPage;
+use App\MoonShine\Resources\Caja\Pages\CajaIndexPage;
+use App\MoonShine\Resources\Locale\LocaleResource;
 use MoonShine\Contracts\Core\PageContract;
+use MoonShine\Laravel\Resources\ModelResource;
 use MoonShine\UI\Components\ActionButton;
+use MoonShine\UI\Components\Badge;
+use MoonShine\UI\Fields\Hidden;
+use MoonShine\UI\Fields\ID;
+use MoonShine\UI\Fields\Number;
+use MoonShine\UI\Fields\Relationships\BelongsTo;
+use MoonShine\UI\Fields\Select;
+use MoonShine\UI\Fields\Switcher;
+use MoonShine\UI\Fields\Text;
 
 /**
  * @extends ModelResource<Caja, CajaIndexPage, CajaFormPage, CajaDetailPage>
@@ -21,8 +30,17 @@ class CajaResource extends ModelResource
     protected string $model = Caja::class;
 
     protected string $title = 'Cajas';
-    
+
     protected string $column = 'nombre';
+    
+    protected bool $columnSelection = true;
+
+    public function search(): array
+    {
+        return ['id', 'nombre', 'sucursal.nombre'];
+    }
+
+    protected array $with = ['sucursal'];
 
     /**
      * @return list<class-string<PageContract>>
@@ -39,25 +57,26 @@ class CajaResource extends ModelResource
     public function fields(): array
     {
         return [
-            \MoonShine\UI\Fields\ID::make()->sortable(),
-            \MoonShine\UI\Fields\Text::make(__('Nombre')),
-            \MoonShine\UI\Fields\Relationships\BelongsTo::make(__('Sucursal'), 'sucursal', resource: \App\MoonShine\Resources\Locale\LocaleResource::class),
-            \MoonShine\UI\Fields\Number::make(__('Saldo Actual'), 'saldo')->sortable()->badge('success'),
-            \MoonShine\UI\Fields\Text::make(__('Efectivo en Turno'))
-                ->changePreview(function($value, Caja $item) {
-                    if (!$item->abierta) {
+            ID::make()->sortable(),
+            Text::make(__('Nombre')),
+            BelongsTo::make(__('Sucursal'), 'sucursal', resource: LocaleResource::class),
+            Number::make(__('Saldo Actual'), 'saldo')->sortable()->badge('success'),
+            Text::make(__('Efectivo en Turno'))
+                ->changePreview(function ($value, Caja $item) {
+                    if (! $item->abierta) {
                         return '-';
                     }
                     $summary = $item->getShiftSummary();
+
                     return format_currency($summary['esperado'] ?? 0);
                 }),
-            \MoonShine\UI\Fields\Text::make(__('Estado'), 'abierta')
+            Text::make(__('Estado'), 'abierta')
 
-                ->changePreview(fn($value) => $value 
-                    ? \MoonShine\UI\Components\Badge::make(__('Jornada Activa'), 'success')
-                    : \MoonShine\UI\Components\Badge::make(__('Caja Cerrada'), 'gray')
+                ->changePreview(fn ($value) => $value
+                    ? Badge::make(__('Jornada Activa'), 'success')
+                    : Badge::make(__('Caja Cerrada'), 'gray')
                 ),
-            \MoonShine\UI\Fields\Switcher::make(__('Inc. Apertura Global'), 'incluir_en_apertura_global')
+            Switcher::make(__('Inc. Apertura Global'), 'incluir_en_apertura_global')
                 ->default(true),
         ];
     }
@@ -79,38 +98,38 @@ class CajaResource extends ModelResource
     {
         return [
             // BOTÓN: ABRIR TURNO
-            ActionButton::make(__('Abrir Jornada'), fn(Caja $item) => route('admin.caja.abrir', $item))
-                ->canSee(fn(Caja $item) => !$item->abierta)
+            ActionButton::make(__('Abrir Jornada'), fn (Caja $item) => route('admin.caja.abrir', $item))
+                ->canSee(fn (Caja $item) => ! $item->abierta)
                 ->success()
                 ->icon('play')
                 ->withConfirm(
                     __('Arqueo de Apertura'),
-                    __('El sistema tiene asignado un fondo inicial de ') . format_currency(get_global_setting('default_opening_amount', 50)) . __(' Por favor, introduce el efectivo REAL que tienes en caja para abrir.'),
+                    __('El sistema tiene asignado un fondo inicial de ').format_currency(get_global_setting('default_opening_amount', 50)).__(' Por favor, introduce el efectivo REAL que tienes en caja para abrir.'),
                     __('Iniciar Jornada Auditada'),
-                    fn() => [
-                        \MoonShine\UI\Fields\Number::make(__('Efectivo Físico Contado'), 'monto_apertura')
+                    fn () => [
+                        Number::make(__('Efectivo Físico Contado'), 'monto_apertura')
                             ->default(get_global_setting('default_opening_amount', 50))
                             ->required(),
-                        \MoonShine\UI\Fields\Hidden::make('monto_esperado')
-                            ->default(get_global_setting('default_opening_amount', 50))
+                        Hidden::make('monto_esperado')
+                            ->default(get_global_setting('default_opening_amount', 50)),
                     ]
                 ),
 
             // BOTÓN: CERRAR TURNO (ARCHEO)
-            ActionButton::make(__('Cerrar Jornada (Arqueo)'), fn(Caja $item) => route('admin.caja.cerrar', $item))
-                ->canSee(fn(Caja $item) => $item->abierta)
+            ActionButton::make(__('Cerrar Jornada (Arqueo)'), fn (Caja $item) => route('admin.caja.cerrar', $item))
+                ->canSee(fn (Caja $item) => $item->abierta)
                 ->warning()
                 ->icon('stop')
                 ->withConfirm(
-                    fn(Caja $item) => __('Cerrar Jornada - Saldo Esperado: ') . format_currency($item->getShiftSummary()['esperado'] ?? 0),
+                    fn (Caja $item) => __('Cerrar Jornada - Saldo Esperado: ').format_currency($item->getShiftSummary()['esperado'] ?? 0),
 
-                    function(Caja $item) {
+                    function (Caja $item) {
                         $summary = $item->getShiftSummary();
                         $ventas = format_currency($summary['ventas'] ?? 0);
                         $egresos = format_currency($summary['egresos'] ?? 0);
                         $fondo = format_currency($summary['apertura'] ?? 0);
                         $esperado = format_currency($summary['esperado'] ?? 0);
-                        
+
                         return "
                             <div class='mb-4 p-4 bg-slate-900 rounded-xl border border-slate-800 shadow-sm'>
                                 <h4 class='text-xs font-bold uppercase tracking-wider text-slate-500 mb-3'>Estado de Caja Actual</h4>
@@ -136,33 +155,32 @@ class CajaResource extends ModelResource
                             <p class='text-sm text-slate-400 mb-2'>Por favor, cuenta el efectivo físico y escribe el monto total abajo:</p>
                         ";
                     },
-                    'Cerrar y Auditar',
+                    __('Cerrar y Auditar'),
 
-                    fn(Caja $item) => [
-                        \MoonShine\UI\Fields\Number::make('Efectivo Físico Contado', 'monto_real')
+                    fn (Caja $item) => [
+                        Number::make(__('Efectivo Físico Contado'), 'monto_real')
                             ->default($item->getShiftSummary()['esperado'] ?? 0)
-                            ->hint('El sistema calcula que deberías tener: ' . format_currency($item->getShiftSummary()['esperado'] ?? 0))
-                            ->required()
+                            ->hint(__('El sistema calcula que deberías tener: ').format_currency($item->getShiftSummary()['esperado'] ?? 0))
+                            ->required(),
                     ]
                 ),
 
-
             // BOTÓN: REGISTRAR EGRESO (GASTO)
-            ActionButton::make(__('Registrar Gasto'), fn(Caja $item) => route('admin.caja.egreso', $item))
+            ActionButton::make(__('Registrar Gasto'), fn (Caja $item) => route('admin.caja.egreso', $item))
                 ->primary()
                 ->icon('minus-circle')
                 ->withConfirm(
                     __('Registrar Gasto de Caja'),
                     __('Registra una salida de dinero para proveedores, servicios u otros conceptos.'),
                     __('Guardar Egreso'),
-                    fn() => [
-                        \MoonShine\UI\Fields\Number::make(__('Monto'), 'monto')
+                    fn () => [
+                        Number::make(__('Monto'), 'monto')
                             ->required(),
-                        \MoonShine\UI\Fields\Select::make(__('Categoría'), 'categoria_id')
-                            ->options(\App\Models\CajaMovimientoCategoria::where('tipo', 'egreso')->pluck('nombre', 'id')->toArray())
+                        Select::make(__('Categoría'), 'categoria_id')
+                            ->options(CajaMovimientoCategoria::where('tipo', 'egreso')->pluck('nombre', 'id')->toArray())
                             ->nullable(),
-                        \MoonShine\UI\Fields\Text::make(__('Descripción / Otro Concepto'), 'descripcion_libre')
-                            ->placeholder(__('Ej: Pago de luz, limpieza, etc.'))
+                        Text::make(__('Descripción / Otro Concepto'), 'descripcion_libre')
+                            ->placeholder(__('Ej: Pago de luz, limpieza, etc.')),
                     ]
                 ),
         ];

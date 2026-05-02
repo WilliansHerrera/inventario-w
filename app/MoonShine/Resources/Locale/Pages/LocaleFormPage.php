@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\Locale\Pages;
 
-use MoonShine\Laravel\Pages\Crud\FormPage;
-use MoonShine\Contracts\UI\ComponentContract;
-use MoonShine\Contracts\UI\FormBuilderContract;
-use MoonShine\UI\Components\FormBuilder;
-use MoonShine\Contracts\UI\FieldContract;
-use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use App\MoonShine\Resources\Locale\LocaleResource;
-use MoonShine\UI\Fields\Text;
+use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
+use MoonShine\Contracts\UI\ComponentContract;
+use MoonShine\Contracts\UI\FieldContract;
+use MoonShine\Contracts\UI\FormBuilderContract;
+use MoonShine\Laravel\Pages\Crud\FormPage;
 use MoonShine\Support\ListOf;
+use MoonShine\UI\Components\FormBuilder;
+use MoonShine\UI\Fields\Text;
 use Throwable;
-
 
 /**
  * @extends FormPage<LocaleResource>
@@ -27,12 +26,12 @@ class LocaleFormPage extends FormPage
     protected function fields(): iterable
     {
         return [
-            Text::make('Nombre', 'nombre')->required(),
-            Text::make('Dirección', 'direccion'),
-            Text::make('Teléfono', 'telefono'),
-            Text::make('Token de Sincronización', 'sync_token')
+            Text::make(__('Nombre'), 'nombre')->required(),
+            Text::make(__('Dirección'), 'direccion'),
+            Text::make(__('Teléfono'), 'telefono'),
+            Text::make(__('Token de Sincronización'), 'sync_token')
                 ->readonly()
-                ->hint('Utilizado por la aplicación POS para sincronización.'),
+                ->hint(__('Utilizado por la aplicación POS para sincronización.')),
         ];
     }
 
@@ -53,7 +52,6 @@ class LocaleFormPage extends FormPage
 
     /**
      * @param  FormBuilder  $component
-     *
      * @return FormBuilder
      */
     protected function modifyFormComponent(FormBuilderContract $component): FormBuilderContract
@@ -63,34 +61,37 @@ class LocaleFormPage extends FormPage
 
     /**
      * @return list<ComponentContract>
+     *
      * @throws Throwable
      */
     protected function topLayer(): array
     {
         return [
-            ...parent::topLayer()
+            ...parent::topLayer(),
         ];
     }
 
     /**
      * @return list<ComponentContract>
+     *
      * @throws Throwable
      */
     protected function mainLayer(): array
     {
         return [
-            ...parent::mainLayer()
+            ...parent::mainLayer(),
         ];
     }
 
     /**
      * @return list<ComponentContract>
+     *
      * @throws Throwable
      */
     protected function bottomLayer(): array
     {
         return [
-            ...parent::bottomLayer()
+            ...parent::bottomLayer(),
         ];
     }
 }

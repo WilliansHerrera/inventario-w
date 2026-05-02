@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\Locale\Pages;
 
-use MoonShine\Laravel\Pages\Crud\IndexPage;
-use MoonShine\Contracts\UI\ComponentContract;
-use MoonShine\UI\Components\Table\TableBuilder;
-use MoonShine\Contracts\UI\FieldContract;
-use MoonShine\Laravel\QueryTags\QueryTag;
-use MoonShine\UI\Components\Metrics\Wrapped\Metric;
 use App\MoonShine\Resources\Locale\LocaleResource;
+use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
+use MoonShine\Contracts\UI\ComponentContract;
+use MoonShine\Contracts\UI\FieldContract;
+use MoonShine\Laravel\Pages\Crud\IndexPage;
+use MoonShine\Laravel\QueryTags\QueryTag;
+use MoonShine\Support\ListOf;
+use MoonShine\UI\Components\Alert;
+use MoonShine\UI\Components\Badge;
+use MoonShine\UI\Components\Metrics\Wrapped\Metric;
+use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Text;
-use MoonShine\Support\ListOf;
 use Throwable;
-
 
 /**
  * @extends IndexPage<LocaleResource>
@@ -30,30 +32,31 @@ class LocaleIndexPage extends IndexPage
     protected function fields(): iterable
     {
         return [
-            ID::make()->sortable(),
-            Text::make('Nombre', 'nombre')->sortable()->required(),
+            ID::make()->sortable()->columnSelection(false),
+            Text::make('Nombre', 'nombre')->sortable()->required()->columnSelection(false),
             Text::make('Dirección', 'direccion'),
             Text::make('Teléfono', 'telefono'),
             Text::make('Token POS (Sucursal)', 'sync_token')
-                ->changePreview(fn($value) => \MoonShine\UI\Components\Badge::make($value ?? '', 'primary')
+                ->changePreview(fn ($value) => Badge::make($value ?? '', 'primary')
                     ->customAttributes([
                         'x-data' => '{}',
                         'class' => 'cursor-pointer',
-                        '@click' => "window.navigator.clipboard.writeText('{$value}'); \$dispatch('toast', {type: 'success', text: 'Token Copiado!'})"
+                        '@click' => "window.navigator.clipboard.writeText('{$value}'); \$dispatch('toast', {type: 'success', text: 'Token Copiado!'})",
                     ])
                 ),
             Text::make('Configuración JSON', 'id')
-                ->changePreview(function($value, \MoonShine\UI\Fields\Text $ctx) {
+                ->changePreview(function ($value, Text $ctx) {
                     $item = $ctx->getData();
-                    if ($item instanceof \MoonShine\Contracts\Core\TypeCasts\DataWrapperContract) {
+                    if ($item instanceof DataWrapperContract) {
                         $item = $item->getOriginal();
                     }
                     $jsonContent = base64_encode($item->getConfigJson());
-                    return \MoonShine\UI\Components\Badge::make('Copiar Configuración', 'success')
+
+                    return Badge::make('Copiar Configuración', 'success')
                         ->customAttributes([
                             'x-data' => '{}',
                             'class' => 'cursor-pointer',
-                            '@click' => "window.navigator.clipboard.writeText('{$jsonContent}'); \$dispatch('toast', {type: 'success', text: '¡Configuración de Sucursal Copiada!'})"
+                            '@click' => "window.navigator.clipboard.writeText('{$jsonContent}'); \$dispatch('toast', {type: 'success', text: '¡Configuración de Sucursal Copiada!'})",
                         ]);
                 }),
         ];
@@ -90,48 +93,50 @@ class LocaleIndexPage extends IndexPage
 
     /**
      * @param  TableBuilder  $component
-     *
      * @return TableBuilder
      */
     protected function modifyListComponent(ComponentContract $component): ComponentContract
     {
-        return $component;
+        return $component->columnSelection();
     }
 
     /**
      * @return list<ComponentContract>
+     *
      * @throws Throwable
      */
     protected function topLayer(): array
     {
         return [
-            \MoonShine\UI\Components\Alert::make(
+            Alert::make(
                 icon: 'computer-desktop',
                 type: 'primary',
             )->content('Para instalar terminales POS, descarga "POS-Setup.exe" y usa "Copiar Configuración" para cada sucursal respectiva.'),
-            ...parent::topLayer()
+            ...parent::topLayer(),
         ];
     }
 
     /**
      * @return list<ComponentContract>
+     *
      * @throws Throwable
      */
     protected function mainLayer(): array
     {
         return [
-            ...parent::mainLayer()
+            ...parent::mainLayer(),
         ];
     }
 
     /**
      * @return list<ComponentContract>
+     *
      * @throws Throwable
      */
     protected function bottomLayer(): array
     {
         return [
-            ...parent::bottomLayer()
+            ...parent::bottomLayer(),
         ];
     }
 }

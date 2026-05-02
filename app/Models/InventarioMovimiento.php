@@ -2,13 +2,24 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class InventarioMovimiento extends Model
 {
-    protected $table = 'inventario_movimientos';
+    use HasFactory;
 
-    protected $fillable = ['inventario_id', 'user_id', 'cantidad', 'tipo', 'motivo'];
+    protected $fillable = [
+        'inventario_id',
+        'user_id',
+        'cantidad',
+        'tipo',
+        'motivo',
+    ];
+
+    protected $casts = [
+        'cantidad' => 'decimal:2',
+    ];
 
     public function inventario()
     {

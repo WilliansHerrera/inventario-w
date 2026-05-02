@@ -4,6 +4,7 @@
     </IfModule>
 
     RewriteEngine On
+    RewriteBase /Inventario-w/public/
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .

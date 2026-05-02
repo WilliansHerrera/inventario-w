@@ -9,17 +9,11 @@ use MoonShine\UI\Components\FlexibleRender;
 
 class BackupPage extends Page
 {
-    /**
-     * @return string
-     */
     public function getTitle(): string
     {
         return 'Copias de Seguridad';
     }
 
-    /**
-     * @return array
-     */
     public function components(): array
     {
         return [

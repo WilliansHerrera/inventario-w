@@ -4,15 +4,11 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\MoonShineUser\Pages;
 
-use Illuminate\Contracts\Database\Eloquent\Builder;
+use App\MoonShine\Resources\MoonShineUser\MoonShineUserResource;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
-use MoonShine\Laravel\Fields\Relationships\BelongsTo;
-use MoonShine\Laravel\Models\MoonshineUserRole;
 use MoonShine\Laravel\Pages\Crud\IndexPage;
-use App\MoonShine\Resources\MoonShineUser\MoonShineUserResource;
-use App\MoonShine\Resources\MoonShineUserRole\MoonShineUserRoleResource;
-use MoonShine\Support\Enums\Color;
+use MoonShine\Laravel\Fields\Relationships\BelongsTo;
 use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\UI\Fields\Date;
 use MoonShine\UI\Fields\Email;
@@ -31,23 +27,23 @@ final class MoonShineUserIndexPage extends IndexPage
     protected function fields(): iterable
     {
         return [
-            ID::make()->sortable(),
+            ID::make()->sortable()->columnSelection(false),
 
             BelongsTo::make(
                 __('moonshine::ui.resource.role'),
                 'moonshineUserRole',
-                formatted: static fn (MoonshineUserRole $model) => $model->name,
-                resource: MoonShineUserRoleResource::class,
-            )->badge(Color::PURPLE),
+                formatted: static fn (\MoonShine\Laravel\Models\MoonshineUserRole $model) => $model->name,
+                resource: \App\MoonShine\Resources\MoonShineUserRole\MoonShineUserRoleResource::class,
+            )->badge(\MoonShine\Support\Enums\Color::PURPLE),
 
-            Text::make(__('moonshine::ui.resource.name'), 'name'),
+            Text::make(__('moonshine::ui.resource.name'), 'name')->columnSelection(false),
 
             Image::make(__('moonshine::ui.resource.avatar'), 'avatar')->modifyRawValue(fn (
                 ?string $raw
             ): string => $raw ?? ''),
 
             Date::make(__('moonshine::ui.resource.created_at'), 'created_at')
-                ->format("d.m.Y")
+                ->format('d.m.Y')
                 ->sortable(),
 
             Email::make(__('moonshine::ui.resource.email'), 'email')
@@ -58,21 +54,12 @@ final class MoonShineUserIndexPage extends IndexPage
     protected function filters(): iterable
     {
         return [
-            BelongsTo::make(
-                __('moonshine::ui.resource.role'),
-                'moonshineUserRole',
-                formatted: static fn (MoonshineUserRole $model) => $model->name,
-                resource: MoonShineUserRoleResource::class,
-            )->valuesQuery(static fn (Builder $q) => $q->select(['id', 'name'])),
-
             Email::make('E-mail', 'email'),
         ];
     }
 
     /**
      * @param  TableBuilder  $component
-     *
-     * @return TableBuilder
      */
     protected function modifyListComponent(ComponentContract $component): TableBuilder
     {

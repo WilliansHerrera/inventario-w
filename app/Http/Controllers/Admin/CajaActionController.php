@@ -7,6 +7,7 @@ use App\Models\Caja;
 use App\Models\CajaMovimientoCategoria;
 use App\Services\CashRegisterService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use MoonShine\Laravel\MoonShineUI;
 use MoonShine\Support\Enums\ToastType;
 
@@ -21,12 +22,12 @@ class CajaActionController extends Controller
         $request->validate([
             'monto_apertura' => 'required|numeric|min:0',
             'monto_esperado' => 'nullable|numeric|min:0',
-            'denominaciones' => 'nullable|array'
+            'denominaciones' => 'nullable|array',
         ]);
 
         try {
             $this->service->openShift(
-                caja: $caja, 
+                caja: $caja,
                 initialBalanceReal: (float) $request->monto_apertura,
                 expectedBalance: $request->monto_esperado ? (float) $request->monto_esperado : null,
                 denominaciones: $request->denominaciones
@@ -37,12 +38,14 @@ class CajaActionController extends Controller
             }
 
             MoonShineUI::toast('Jornada iniciada con éxito.', ToastType::SUCCESS);
+
             return redirect(route('moonshine.resource.page', ['resourceUri' => 'caja-resource', 'pageUri' => 'caja-index-page']));
         } catch (\Exception $e) {
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'error' => $e->getMessage()], 422);
             }
             MoonShineUI::toast($e->getMessage(), ToastType::ERROR);
+
             return back();
         }
     }
@@ -51,12 +54,12 @@ class CajaActionController extends Controller
     {
         $request->validate([
             'monto_real' => 'required|numeric|min:0',
-            'denominaciones' => 'nullable|array'
+            'denominaciones' => 'nullable|array',
         ]);
 
         try {
             $this->service->closeShift(
-                caja: $caja, 
+                caja: $caja,
                 montoReal: (float) $request->monto_real,
                 denominaciones: $request->denominaciones
             );
@@ -66,12 +69,14 @@ class CajaActionController extends Controller
             }
 
             MoonShineUI::toast('Jornada cerrada con éxito.', ToastType::SUCCESS);
+
             return redirect(route('moonshine.resource.page', ['resourceUri' => 'caja-resource', 'pageUri' => 'caja-index-page']));
         } catch (\Exception $e) {
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'error' => $e->getMessage()], 422);
             }
             MoonShineUI::toast($e->getMessage(), ToastType::ERROR);
+
             return back();
         }
     }
@@ -85,8 +90,8 @@ class CajaActionController extends Controller
         ]);
 
         try {
-            if (!$caja->abierta && get_global_setting('pos_block_without_shift', false)) {
-                 throw new \Exception("La caja está cerrada y el bloqueo está activo.");
+            if (! $caja->abierta && get_global_setting('pos_block_without_shift', false)) {
+                throw new \Exception('La caja está cerrada y el bloqueo está activo.');
             }
 
             $categoria = $request->categoria_id ? CajaMovimientoCategoria::find($request->categoria_id) : null;
@@ -105,39 +110,41 @@ class CajaActionController extends Controller
             }
 
             MoonShineUI::toast('Egreso registrado.', ToastType::SUCCESS);
+
             return redirect(route('moonshine.resource.page', ['resourceUri' => 'caja-resource', 'pageUri' => 'caja-index-page']));
         } catch (\Exception $e) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['error' => $e->getMessage()], 422);
             }
             MoonShineUI::toast($e->getMessage(), ToastType::ERROR);
+
             return back();
         }
     }
 
     public function iniciarDiaCompleto(Request $request)
     {
-        \Illuminate\Support\Facades\Log::info("Intento de Iniciar Día Completo Auditado");
+        Log::info('Intento de Iniciar Día Completo Auditado');
         try {
             $montoApertura = (float) $request->get('monto_apertura', get_global_setting('default_opening_amount', 50));
-            
+
             $cajasCerradas = Caja::where('abierta', false)
                 ->where('incluir_en_apertura_global', true)
                 ->get();
 
-            \Illuminate\Support\Facades\Log::info("Cajas encontradas para apertura global: " . $cajasCerradas->count());
+            Log::info('Cajas encontradas para apertura global: '.$cajasCerradas->count());
 
             if ($cajasCerradas->isEmpty()) {
-                throw new \Exception("No hay cajas cerradas que requieran apertura global.");
+                throw new \Exception('No hay cajas cerradas que requieran apertura global.');
             }
 
             foreach ($cajasCerradas as $caja) {
                 $this->service->openShift($caja, $montoApertura, $montoApertura);
             }
 
-            MoonShineUI::toast("Se han iniciado las jornadas para " . $cajasCerradas->count() . " cajas con un fondo de " . format_currency($montoApertura), ToastType::SUCCESS);
+            MoonShineUI::toast('Se han iniciado las jornadas para '.$cajasCerradas->count().' cajas con un fondo de '.format_currency($montoApertura), ToastType::SUCCESS);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error("Error en Iniciar Día Completo: " . $e->getMessage());
+            Log::error('Error en Iniciar Día Completo: '.$e->getMessage());
             MoonShineUI::toast($e->getMessage(), ToastType::ERROR);
         }
 

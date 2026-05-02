@@ -2,33 +2,52 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Producto extends Model
 {
-    protected $fillable = ['nombre', 'sku', 'codigo_barra', 'descripcion', 'precio', 'margen', 'precio_venta', 'imagen'];
+    use HasFactory;
 
-    protected $casts = [
-        'precio' => 'decimal:2',
-        'margen' => 'decimal:2',
-        'precio_venta' => 'decimal:2',
+    public ?int $compra_id_for_log = null;
+
+    protected $fillable = [
+        'nombre',
+        'sku',
+        'codigo_barra',
+        'descripcion',
+        'imagen',
+        'galeria',
+        'precio',
+        'margen',
+        'precio_venta',
     ];
 
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($product) {
-            if (empty($product->sku)) {
-                $date = now()->format('ymd');
-                $random = strtoupper(\Illuminate\Support\Str::random(4));
-                $product->sku = "INV-{$date}-{$random}";
-            }
-        });
-    }
+    protected $casts = [
+        'galeria' => 'array',
+    ];
 
     public function inventarios()
     {
         return $this->hasMany(Inventario::class);
+    }
+
+    public function costoHistorials()
+    {
+        return $this->hasMany(ProductoCostoHistorial::class);
+    }
+
+    protected static function booted()
+    {
+        static::updating(function ($producto) {
+            if ($producto->isDirty('precio')) {
+                $producto->costoHistorials()->create([
+                    'costo_anterior' => $producto->getOriginal('precio'),
+                    'costo_nuevo' => $producto->precio,
+                    'user_id' => auth()->id() ?? \App\Models\User::first()?->id,
+                    'compra_id' => $producto->compra_id_for_log ?? request()->get('compra_id'),
+                ]);
+            }
+        });
     }
 }

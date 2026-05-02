@@ -3,10 +3,9 @@
 namespace App\Services;
 
 use App\Models\Inventario;
-use Illuminate\Validation\ValidationException;
-
 use App\Models\InventarioMovimiento;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class InventoryService
 {

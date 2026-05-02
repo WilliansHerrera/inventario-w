@@ -1,86 +1,66 @@
-# 🚀 Inventario-w | Industrial POS & Inventory System
-## Version 2.2.0 (Express & Industrial Cash Management + POS Security PIN)
-
-> [!IMPORTANT]
-> **ESTADO DE LA VERSIÓN:** Esta versión habilita los **Modos de Gestión de Efectivo** y la **Autenticación por PIN** en el POS. Se ha mejorado la seguridad y la flexibilidad operativa.
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="300" alt="Laravel Logo">
-  <img src="https://moonshine-laravel.com/logo.svg" width="150" alt="MoonShine Logo">
+<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
----
+## About Laravel
 
-## 🌟 Overview
-**Inventario-w** es un ecosistema industrial de alto rendimiento para el Punto de Venta (POS) y la gestión de inventarios. Desarrollado sobre **Laravel 12** y **MoonShine 4**, combina un panel administrativo web avanzado con terminales nativas ligeras para Windows diseñadas para operar sin conexión.
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
-La versión **2.2.0** introduce la flexibilidad de operar en modo Express o Industrial y añade una capa de seguridad mediante PIN para los cajeros.
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
----
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-## 🛠️ Tech Stack
-- **Web Framework:** [Laravel 12.x](https://laravel.com)
-- **Admin Panel:** [MoonShine 4.x](https://moonshine-laravel.com) (Page-based Architecture)
-- **Desktop Engine:** [Tauri 2.x](https://tauri.app) (Rust + Node.js)
-- **Database:** MySQL (Admin) + SQLite (Local Sync)
-- **Real-time UI:** Alpine.js + TailwindCSS (Premium Aesthetic)
+## Learning Laravel
 
----
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
-## ✨ Key Features (v2.2.0)
+You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
 
-### 🛡️ Seguridad POS (New)
-- **Autenticación por PIN:** Acceso rápido y seguro para cajeros mediante un PIN de 4 dígitos.
-- **Gestión Centralizada:** Asignación y actualización de PINs desde el panel administrativo MoonShine.
+If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-### ⚙️ Modos de Gestión de Efectivo (New)
-- **Modo Express:** Operación simplificada de caja única ideal para tiendas pequeñas.
-- **Modo Industrial:** Control avanzado multi-caja, multi-turno y arqueos detallados.
+## Laravel Sponsors
 
-### 📦 Gestión de Inventario
-- **Recepción de Compras:** Interfaz nativa en MoonShine 4 para la carga de productos desde proveedores.
-- **Procesamiento de Stock:** Algoritmo de ingreso automático que actualiza existencias en sucursales.
-- **Historial de Costos:** Rastreo automático de cambios en el precio de compra.
+We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
 
-### 🏦 Auditoría de Turnos
-- **Arqueo Asistido:** Resumen dinámico en tiempo real de ventas, egresos y saldo esperado.
-- **Desglose de Denominaciones:** Calculadora integrada de billetes y monedas.
+### Premium Partners
 
----
+- **[Vehikl](https://vehikl.com/)**
+- **[Tighten Co.](https://tighten.co)**
+- **[WebReinvent](https://webreinvent.com/)**
+- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
+- **[64 Robots](https://64robots.com)**
+- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
+- **[Cyber-Duck](https://cyber-duck.co.uk)**
+- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
+- **[Jump24](https://jump24.co.uk)**
+- **[Redberry](https://redberry.international/laravel/)**
+- **[Active Logic](https://activelogic.com)**
+- **[byte5](https://byte5.de)**
+- **[OP.GG](https://op.gg)**
 
-## 🚀 Instalación Rápida
+## Contributing
 
-### 1. Servidor Web (Laravel)
-```bash
-# Instalar dependencias
-composer install
-npm install
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
 
-# Configurar entorno
-cp .env.example .env
-php artisan key:generate
+## Code of Conduct
 
-# Migraciones y Seeders
-php artisan migrate --seed
-```
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
 
-### 🖥️ Windows Terminal (Tauri)
-Para generar el instalador nativo de la versión 2.2.0:
-1. Abre una terminal de PowerShell como administrador.
-2. Ejecuta el script de compilación automatizada:
-   ```powershell
-   .\POS-Windows\build.ps1
-   ```
-3. El instalador generado se ubicará en: `storage/app/public/pos/POS-Setup.exe`
+## Security Vulnerabilities
 
----
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
-## 👤 Autor
-**Willians Herrera**
-- 📧 [williansherrera@gmail.com](mailto:williansherrera@gmail.com)
-- 🎯 Especialista en Soluciones POS Industriales & IA
+## License
 
----
-
-## 📄 Licencia
-Este proyecto es software de código abierto bajo la licencia [MIT](LICENSE).
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
